@@ -1,0 +1,299 @@
+[
+  {
+    "id": "space-marine-azul",
+    "name": "Marine espacial azul",
+    "subject": "Infantería de ciencia ficción con armadura energética",
+    "faction": "Ultramarines / capítulo azul",
+    "summary": "Azul profundo trabajado desde negro, con oro apagado en los relieves y lentes rojas. El esquema clásico de escuadra: rápido de repetir en lote.",
+    "difficulty": "intermedio",
+    "tags": ["ciencia ficción", "armadura", "azul", "lote", "warhammer"],
+    "zones": [
+      {
+        "name": "Preparación",
+        "steps": [
+          { "role": "imprimacion", "code": "AK11242", "note": "Negro: acelera las sombras de la armadura." }
+        ]
+      },
+      {
+        "name": "Armadura",
+        "steps": [
+          { "role": "base", "code": "AK11181", "note": "Capa fina, dejando negro en las juntas." },
+          { "role": "capa", "code": "AK11179", "note": "Color dominante de la placa, sin llegar a los recovecos." },
+          { "role": "lavado", "code": "AK11228", "note": "Tinta diluida solo en paneles y juntas." },
+          { "role": "luz", "code": "AK11165" },
+          { "role": "filo", "code": "AK11011", "note": "Línea fina en aristas y bordes de hombrera." }
+        ]
+      },
+      {
+        "name": "Detalles dorados",
+        "steps": [
+          { "role": "base", "code": "AK11193" },
+          { "role": "lavado", "code": "AK11219" },
+          { "role": "luz", "code": "AK11192" }
+        ]
+      },
+      {
+        "name": "Metal desnudo",
+        "steps": [
+          { "role": "base", "code": "AK11212" },
+          { "role": "lavado", "code": "AK11222" },
+          { "role": "luz", "code": "AK11210", "note": "Solo en filos de arma y cargador." }
+        ]
+      },
+      {
+        "name": "Lentes y ojos",
+        "steps": [
+          { "role": "base", "code": "AK11096" },
+          { "role": "capa", "code": "AK11089" },
+          { "role": "luz", "code": "AK11083", "note": "Media luna en la mitad inferior de la lente." },
+          { "role": "detalle", "code": "AK11001", "note": "Punto de brillo en la esquina superior." }
+        ]
+      },
+      {
+        "name": "Cuero y correas",
+        "steps": [
+          { "role": "base", "code": "AK11110" },
+          { "role": "luz", "code": "AK11121" }
+        ]
+      },
+      {
+        "name": "Peana",
+        "steps": [
+          { "role": "base", "code": "AK11024" },
+          { "role": "luz", "code": "AK11010", "note": "Pincel seco para levantar la textura." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "piel-humana-clara",
+    "name": "Piel humana clara",
+    "subject": "Rostro y manos a escala 28–35 mm",
+    "summary": "La rampa completa de la gama Figures: base, dos sombras y dos luces. Sirve igual para un miliciano histórico que para un aventurero de fantasía.",
+    "difficulty": "intermedio",
+    "tags": ["piel", "rostro", "figuras", "histórico", "fantasía"],
+    "zones": [
+      {
+        "name": "Piel",
+        "steps": [
+          { "role": "base", "code": "AK11401", "note": "Cubre toda la zona de piel, incluidos recovecos." },
+          { "role": "sombra", "code": "AK11404", "note": "Cuencas, bajo la nariz, bajo el labio y el cuello." },
+          { "role": "sombra", "code": "AK11405", "note": "Solo en la línea más profunda: párpado y comisuras." },
+          { "role": "capa", "code": "AK11402", "note": "Vuelve a montar el volumen: frente, pómulos, nariz." },
+          { "role": "luz", "code": "AK11403", "note": "Puntos altos: tabique, arco superciliar, mentón." },
+          { "role": "veladura", "code": "AK11221", "note": "Tinta muy diluida para unificar las transiciones." }
+        ]
+      },
+      {
+        "name": "Ojos",
+        "steps": [
+          { "role": "base", "code": "AK11418", "note": "Rellena la cuenca completa." },
+          { "role": "detalle", "code": "AK11002", "note": "Dos almendras de blanco roto, nunca blanco puro." },
+          { "role": "detalle", "code": "AK11111", "note": "Pupila: punto o línea vertical fina." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "piel-verde-orco",
+    "name": "Piel verde de orco",
+    "subject": "Piel monstruosa verde y equipo tosco",
+    "faction": "Orcos / pielesverdes",
+    "summary": "Verde oscuro subido hacia oliva dorado, con metal oxidado y cuero curtido. Aguanta bien el pincel seco, así que rinde mucho en unidades grandes.",
+    "difficulty": "iniciacion",
+    "tags": ["fantasía", "monstruo", "verde", "pincel seco", "lote"],
+    "zones": [
+      {
+        "name": "Piel",
+        "steps": [
+          { "role": "base", "code": "AK11153" },
+          { "role": "capa", "code": "AK11147", "note": "Deja el tono base en los pliegues." },
+          { "role": "lavado", "code": "AK11226", "note": "Diluido, para asentar la transición." },
+          { "role": "luz", "code": "AK11139" },
+          { "role": "luz", "code": "AK11135", "note": "Nudillos, frente, mandíbula y músculos tensos." }
+        ]
+      },
+      {
+        "name": "Cuero y correas",
+        "steps": [
+          { "role": "base", "code": "AK11109" },
+          { "role": "luz", "code": "AK11121", "note": "Pincel seco suave sobre los bordes del cuero." }
+        ]
+      },
+      {
+        "name": "Armas oxidadas",
+        "steps": [
+          { "role": "base", "code": "AK11212" },
+          { "role": "capa", "code": "AK11103", "note": "Toques irregulares con esponja." },
+          { "role": "detalle", "code": "AK11105", "note": "Puntos de óxido fresco, muy escasos." },
+          { "role": "luz", "code": "AK11210", "note": "Solo el filo del arma." }
+        ]
+      },
+      {
+        "name": "Dientes y uñas",
+        "steps": [
+          { "role": "base", "code": "AK11009" },
+          { "role": "luz", "code": "AK11004" },
+          { "role": "lavado", "code": "AK11219", "note": "Ensucia la raíz del diente." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hueso-no-muerto",
+    "name": "Hueso y no-muerto",
+    "subject": "Esqueletos, calaveras y osamenta",
+    "faction": "No-muertos",
+    "summary": "Hueso cálido con lavado sepia y un acento turquesa fantasmal en los ojos. El contraste frío-cálido es lo que hace que el esqueleto no parezca un muñeco beige.",
+    "difficulty": "iniciacion",
+    "tags": ["no-muerto", "hueso", "fantasía", "contraste", "iniciación"],
+    "zones": [
+      {
+        "name": "Preparación",
+        "steps": [
+          { "role": "imprimacion", "code": "AK11241" }
+        ]
+      },
+      {
+        "name": "Hueso",
+        "steps": [
+          { "role": "base", "code": "AK11121" },
+          { "role": "capa", "code": "AK11114" },
+          { "role": "lavado", "code": "AK11219", "note": "Generoso: es lo que define cada costilla." },
+          { "role": "luz", "code": "AK11004" },
+          { "role": "filo", "code": "AK11002", "note": "Pómulo, arcada dentaria y crestas óseas." }
+        ]
+      },
+      {
+        "name": "Harapos",
+        "steps": [
+          { "role": "base", "code": "AK11125" },
+          { "role": "lavado", "code": "AK11229" },
+          { "role": "luz", "code": "AK11009", "note": "Pincel seco en los bordes deshilachados." }
+        ]
+      },
+      {
+        "name": "Fuego fantasmal",
+        "steps": [
+          { "role": "base", "code": "AK11172", "note": "Interior de la cuenca ocular." },
+          { "role": "capa", "code": "AK11171" },
+          { "role": "luz", "code": "AK11143" },
+          { "role": "detalle", "code": "AK11001", "note": "Núcleo del brillo, mínimo." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "panzer-iv-dunkelgelb-1944",
+    "name": "Panzer IV Dunkelgelb 1944",
+    "subject": "Blindado alemán en camuflaje de tres tonos",
+    "faction": "Wehrmacht",
+    "summary": "Dunkelgelb de base con manchas de Olivgrün y Rotbraun, envejecido con óxido y polvo. Esquema estándar del frente occidental a partir de 1943.",
+    "difficulty": "avanzado",
+    "tags": ["histórico", "blindado", "camuflaje", "WWII", "envejecido"],
+    "zones": [
+      {
+        "name": "Preparación",
+        "steps": [
+          { "role": "imprimacion", "code": "AK11245", "note": "Imprimación ya en color base: ahorra una capa." }
+        ]
+      },
+      {
+        "name": "Casco y torreta",
+        "steps": [
+          { "role": "base", "code": "AK11319", "note": "Tono de fábrica de 1944." },
+          { "role": "capa", "code": "AK11309", "note": "Manchas de Olivgrün a aerógrafo o esponja." },
+          { "role": "capa", "code": "AK11330", "note": "Manchas de Rotbraun, menos superficie que el verde." },
+          { "role": "luz", "code": "AK11320", "note": "Aclara el centro de los paneles grandes." }
+        ]
+      },
+      {
+        "name": "Envejecido",
+        "steps": [
+          { "role": "lavado", "code": "AK11229", "note": "Perfilado de paneles y remaches." },
+          { "role": "detalle", "code": "AK11107", "note": "Desconchones con esponja en aristas." },
+          { "role": "detalle", "code": "AK11103", "note": "Óxido en escape y herramientas." },
+          { "role": "veladura", "code": "AK11120", "note": "Polvo acumulado en faldones y bajos." }
+        ]
+      },
+      {
+        "name": "Cadenas y ruedas",
+        "steps": [
+          { "role": "base", "code": "AK11251" },
+          { "role": "capa", "code": "AK11107" },
+          { "role": "luz", "code": "AK11211", "note": "Pincel seco en la zona de contacto: brillo metálico pulido." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "metales-tmm",
+    "name": "Metales realistas (TMM)",
+    "subject": "Acero, oro y bronce con pintura metálica",
+    "summary": "Receta transversal de metales: sirve para el arma de cualquier miniatura. Metálico + lavado + filo, sin pintar el brillo a mano.",
+    "difficulty": "iniciacion",
+    "tags": ["metal", "transversal", "acero", "oro", "iniciación"],
+    "zones": [
+      {
+        "name": "Acero y hierro",
+        "steps": [
+          { "role": "base", "code": "AK11212" },
+          { "role": "lavado", "code": "AK11223", "note": "Tinta negra muy diluida, solo en recovecos." },
+          { "role": "luz", "code": "AK11210" },
+          { "role": "filo", "code": "AK11209", "note": "Filo del arma, sin tocar la hoja entera." }
+        ]
+      },
+      {
+        "name": "Oro",
+        "steps": [
+          { "role": "base", "code": "AK11193" },
+          { "role": "capa", "code": "AK11191" },
+          { "role": "lavado", "code": "AK11219" },
+          { "role": "luz", "code": "AK11192" }
+        ]
+      },
+      {
+        "name": "Bronce y cobre",
+        "steps": [
+          { "role": "base", "code": "AK11196" },
+          { "role": "capa", "code": "AK11197" },
+          { "role": "lavado", "code": "AK11229" },
+          { "role": "detalle", "code": "AK11170", "note": "Verdín en las juntas, muy puntual." }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "peana-rocosa",
+    "name": "Peana rocosa neutra",
+    "subject": "Base de roca y tierra para cualquier miniatura",
+    "summary": "Peana gris-tierra que no compite con la miniatura. Tres pasos y vale para fantasía, histórico o ciencia ficción.",
+    "difficulty": "iniciacion",
+    "tags": ["peana", "transversal", "roca", "tierra", "iniciación"],
+    "zones": [
+      {
+        "name": "Roca",
+        "steps": [
+          { "role": "base", "code": "AK11023" },
+          { "role": "lavado", "code": "AK11222" },
+          { "role": "luz", "code": "AK11013", "note": "Pincel seco en horizontal para marcar los estratos." },
+          { "role": "filo", "code": "AK11012", "note": "Pincel seco muy ligero en las aristas vivas." }
+        ]
+      },
+      {
+        "name": "Tierra",
+        "steps": [
+          { "role": "base", "code": "AK11120" },
+          { "role": "luz", "code": "AK11121" },
+          { "role": "luz", "code": "AK11115", "note": "Pincel seco final sobre la textura suelta." }
+        ]
+      },
+      {
+        "name": "Canto de la peana",
+        "steps": [
+          { "role": "detalle", "code": "AK11028", "note": "Dos capas limpias; delimita la miniatura." }
+        ]
+      }
+    ]
+  }
+]

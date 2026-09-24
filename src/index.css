@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* La app se usa sobre la mesa de pintura, a menudo con luz cálida de flexo:
+   el tema oscuro reduce el deslumbramiento y no falsea los swatches. */
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-neutral-950 text-neutral-100 antialiased;
+}
+
+/* Los swatches son el dato, no decoración: se imprimen tal cual. */
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
