@@ -78,3 +78,11 @@ crema, y AK11001 y AK11029 aparecen clasificados bajo «Intense» en vez de
 «Standard»—. Todo eso se corrige en `data/raw/` y se regenera.
 
 [fuente]: https://github.com/Arcturus5404/miniature-paints
+
+## Licencia
+
+Este proyecto se publica bajo licencia [MIT](LICENSE).
+
+Los ficheros de datos de `data/raw/` son obra de terceros y mantienen su propia
+licencia MIT, cuyo texto y aviso de copyright están en
+[`data/raw/LICENSE.miniature-paints`](data/raw/LICENSE.miniature-paints).
