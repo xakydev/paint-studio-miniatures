@@ -5,6 +5,10 @@ Los ficheros `AK.md` y `AKRC.md` provienen del repositorio
 (MIT License, Copyright (c) 2022 Rick Fleuren), que publica listados de pinturas
 de miniaturas con código, gama y valor RGB/hex.
 
+El texto íntegro de esa licencia está en `LICENSE.miniature-paints`, junto a los
+ficheros que ampara. La MIT obliga a acompañar el aviso de copyright y la
+licencia al redistribuir los datos, y este repositorio los redistribuye.
+
 - `AK.md`   — gamas AK Interactive (3rd Gen, AFV, Air, Figures, Naval, General...)
 - `AKRC.md` — gama AK Real Colors
 
