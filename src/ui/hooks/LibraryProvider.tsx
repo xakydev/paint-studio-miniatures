@@ -2,25 +2,25 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { RECIPES } from "../../data/static/catalogSource";
 import {
-  loadCollection,
-  loadCustomRecipes,
+  loadCollectionSync,
+  loadCustomRecipesSync,
   makeEntry,
-  saveCollection,
-  saveCustomRecipes,
-} from "../../lib/storage";
+  saveCollectionSync,
+  saveCustomRecipesSync,
+} from "../../data/local/legacySync";
 import { OWNERSHIP, type CollectionEntry, type Ownership, type Recipe } from "../../domain/types";
 import { LibraryContext, type LibraryApi } from "./libraryContext";
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
-  const [entries, setEntries] = useState<CollectionEntry[]>(loadCollection);
-  const [customRecipes, setCustomRecipes] = useState<Recipe[]>(loadCustomRecipes);
+  const [entries, setEntries] = useState<CollectionEntry[]>(loadCollectionSync);
+  const [customRecipes, setCustomRecipes] = useState<Recipe[]>(loadCustomRecipesSync);
 
   useEffect(() => {
-    saveCollection(entries);
+    saveCollectionSync(entries);
   }, [entries]);
 
   useEffect(() => {
-    saveCustomRecipes(customRecipes);
+    saveCustomRecipesSync(customRecipes);
   }, [customRecipes]);
 
   const byCode = new Map(entries.map((entry) => [entry.code, entry]));

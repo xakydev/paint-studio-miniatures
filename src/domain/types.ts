@@ -155,4 +155,10 @@ export interface CollectionEntry {
   note?: string;
   /** ISO 8601. */
   updatedAt: string;
+  /**
+   * ISO 8601. Presente si la entrada está borrada lógicamente: los puertos
+   * nunca eliminan filas, así que "quitar" es marcar esta fecha en vez de
+   * eliminar el registro.
+   */
+  deletedAt?: string;
 }
