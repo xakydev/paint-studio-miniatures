@@ -36,19 +36,19 @@ npm run dev        # http://localhost:5173 (también accesible desde el móvil e
 | `npm run build`         | Chequeo de tipos y build de producción en `dist/`     |
 | `npm test`              | Tests (Vitest)                                        |
 | `npm run lint`          | oxlint                                                |
-| `npm run build:catalog` | Regenera `src/data/catalog.json` desde `data/raw/`    |
+| `npm run build:catalog` | Regenera `src/data/static/catalog.json` desde `data/raw/` |
 
 ## Cómo está montado
 
 ```
-data/raw/            Tablas de pinturas de terceros, vendorizadas sin tocar
-data/overrides.json  Nuestras correcciones sobre esa fuente
-scripts/             build-catalog.ts: raw + overrides → src/data/catalog.json
-src/lib/color.ts     Conversión sRGB→CIELAB y distancia CIEDE2000
-src/lib/catalog.ts   Búsqueda, filtros, matching y cobertura de recetas
-src/lib/storage.ts   Persistencia en localStorage y respaldos
-src/data/            catalog.json (generado) y recipes.json (semilla editable)
-src/routes/          Una página por sección
+data/raw/               Tablas de pinturas de terceros, vendorizadas sin tocar
+data/overrides.json     Nuestras correcciones sobre esa fuente
+scripts/                build-catalog.ts: raw + overrides → src/data/static/catalog.json
+src/domain/color.ts     Conversión sRGB→CIELAB y distancia CIEDE2000
+src/domain/catalog.ts   Búsqueda, filtros, matching y cobertura de recetas
+src/lib/storage.ts      Persistencia en localStorage y respaldos
+src/data/static/        catalog.json (generado) y recipes.json (semilla editable)
+src/ui/routes/          Una página por sección
 ```
 
 **Por qué CIEDE2000 y no distancia RGB.** Dos colores pueden estar cerca en RGB
@@ -58,17 +58,17 @@ resultados es el que esperarías delante del expositor. Como referencia, ΔE < 1
 es indistinguible y ΔE > 10 son colores claramente distintos.
 
 La implementación está verificada contra los vectores de Sharma, Wu & Dalal
-(2005), el juego de pruebas canónico del estándar (`src/lib/color.test.ts`).
+(2005), el juego de pruebas canónico del estándar (`src/domain/color.test.ts`).
 
 ## Editar los datos
 
-**Recetas.** `src/data/recipes.json`. Cada receta agrupa zonas y cada zona una
+**Recetas.** `src/data/static/recipes.json`. Cada receta agrupa zonas y cada zona una
 lista de pasos con `role` y `code`. Un test comprueba que ninguna receta apunta
 a una referencia inexistente, así que un código mal escrito sale en `npm test`.
 Las recetas que crees desde la app se guardan aparte, en el navegador, y una
 receta propia con el mismo `id` reemplaza a la de semilla.
 
-**Catálogo.** No edites `src/data/catalog.json` a mano: se regenera. Tampoco
+**Catálogo.** No edites `src/data/static/catalog.json` a mano: se regenera. Tampoco
 edites `data/raw/`: son ficheros de terceros que conviene poder actualizar de
 golpe. Las correcciones van en `data/overrides.json`, que el build aplica encima
 de la fuente y así sobreviven a refrescar los datos:

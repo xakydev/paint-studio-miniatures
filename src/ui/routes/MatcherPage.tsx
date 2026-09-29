@@ -2,9 +2,10 @@ import { useState } from "react";
 
 import { PaintCard } from "../components/PaintCard";
 import { useLibrary } from "../hooks/libraryContext";
-import { describeDelta, findClosestPaints } from "../lib/catalog";
-import { extractDominantColors, type DominantColor } from "../lib/imageColors";
-import { readableTextOn } from "../lib/color";
+import { describeDelta, findClosestPaints } from "../../domain/catalog";
+import { extractDominantColors, type DominantColor } from "../../domain/imageColors";
+import { readableTextOn } from "../../domain/color";
+import { PAINTS } from "../../data/static/catalogSource";
 
 export function MatcherPage() {
   const { ownedCodes } = useLibrary();
@@ -14,7 +15,7 @@ export function MatcherPage() {
   const [imageError, setImageError] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
 
-  const matches = findClosestPaints(hex, {
+  const matches = findClosestPaints(PAINTS, hex, {
     limit: 12,
     codes: onlyOwned ? ownedCodes : undefined,
   });

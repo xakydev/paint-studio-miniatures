@@ -1,5 +1,5 @@
 /**
- * Convierte las tablas markdown de `data/raw/` en `src/data/catalog.json`,
+ * Convierte las tablas markdown de `data/raw/` en `src/data/static/catalog.json`,
  * aplicando encima las correcciones de `data/overrides.json`.
  *
  * Uso: npm run build:catalog
@@ -14,7 +14,7 @@ import {
   PAINT_FAMILY_ORDER,
   type PaintFamily,
   type PaintRecord,
-} from "../src/types.ts";
+} from "../src/domain/types.ts";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -276,7 +276,7 @@ const catalog = [...byCode.values()].sort((a, b) =>
 );
 
 writeFileSync(
-  resolve(projectRoot, "src/data/catalog.json"),
+  resolve(projectRoot, "src/data/static/catalog.json"),
   `${JSON.stringify(catalog, null, 0)}\n`,
   "utf8",
 );

@@ -3,9 +3,10 @@ import { useRef, useState } from "react";
 import { PaintCard } from "../components/PaintCard";
 import { PaintSwatch } from "../components/PaintSwatch";
 import { useLibrary } from "../hooks/libraryContext";
-import { PAINTS, filterPaints, getPaint } from "../lib/catalog";
-import { buildBackup, parseBackup } from "../lib/storage";
-import { OWNERSHIP, type Paint } from "../types";
+import { filterPaints } from "../../domain/catalog";
+import { buildBackup, parseBackup } from "../../lib/storage";
+import { OWNERSHIP, type Paint } from "../../domain/types";
+import { PAINTS, getPaint } from "../../data/static/catalogSource";
 
 const TAB = {
   OWNED: "owned",

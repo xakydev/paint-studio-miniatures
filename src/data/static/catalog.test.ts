@@ -1,18 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { PAINT_FAMILY_ORDER } from "../types";
 import {
-  PAINTS,
-  RECIPES,
   describeDelta,
   filterPaints,
   findClosestPaints,
-  getPaint,
   recipeCodes,
   recipeCoverage,
   substitutesFromCollection,
-} from "./catalog";
-import { EMPTY_FILTERS } from "./catalog";
+} from "../../domain/catalog";
+import { PAINT_FAMILY_ORDER } from "../../domain/types";
+import { EMPTY_FILTERS, PAINTS, RECIPES, getPaint } from "./catalogSource";
 
 describe("catálogo", () => {
   it("no tiene referencias duplicadas", () => {
@@ -73,37 +70,39 @@ describe("recipeCoverage", () => {
 describe("findClosestPaints", () => {
   it("devuelve primero la referencia exacta", () => {
     const target = getPaint("AK11179")!;
-    const [best] = findClosestPaints(target.hex, { limit: 5 });
+    const [best] = findClosestPaints(PAINTS, target.hex, { limit: 5 });
     expect(best?.paint.code).toBe("AK11179");
     expect(best?.delta).toBeCloseTo(0, 6);
   });
 
   it("ordena por parecido creciente", () => {
-    const deltas = findClosestPaints("#7A4231", { limit: 10 }).map((m) => m.delta);
+    const deltas = findClosestPaints(PAINTS, "#7A4231", { limit: 10 }).map(
+      (m) => m.delta,
+    );
     expect([...deltas].sort((a, b) => a - b)).toEqual(deltas);
   });
 
   it("respeta el filtro de referencias", () => {
     const pool = new Set(["AK11191", "AK11212"]);
-    const matches = findClosestPaints("#FFFFFF", { limit: 10, codes: pool });
+    const matches = findClosestPaints(PAINTS, "#FFFFFF", { limit: 10, codes: pool });
     expect(matches.map((m) => m.paint.code).sort()).toEqual(["AK11191", "AK11212"]);
   });
 
   it("no devuelve nada si el filtro deja el catálogo vacío", () => {
-    expect(findClosestPaints("#FFFFFF", { codes: new Set() })).toEqual([]);
+    expect(findClosestPaints(PAINTS, "#FFFFFF", { codes: new Set() })).toEqual([]);
   });
 });
 
 describe("substitutesFromCollection", () => {
   it("propone lo más parecido de entre lo que tienes", () => {
     const owned = new Set(["AK11181", "AK11191", "AK11029"]);
-    const [best] = substitutesFromCollection("AK11179", owned);
+    const [best] = substitutesFromCollection(PAINTS, "AK11179", owned);
     // AK11179 Ultramarine contra un azul oscuro, un oro y un negro: gana el azul.
     expect(best?.paint.code).toBe("AK11181");
   });
 
   it("no propone nada si la colección está vacía", () => {
-    expect(substitutesFromCollection("AK11179", new Set())).toEqual([]);
+    expect(substitutesFromCollection(PAINTS, "AK11179", new Set())).toEqual([]);
   });
 });
 

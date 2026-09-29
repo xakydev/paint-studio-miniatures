@@ -1,6 +1,6 @@
 import { createContext, use } from "react";
 
-import type { CollectionEntry, Ownership, Recipe } from "../types";
+import type { CollectionEntry, Ownership, Recipe } from "../../domain/types";
 
 export interface LibraryApi {
   entries: CollectionEntry[];

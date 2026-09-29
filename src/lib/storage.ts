@@ -1,5 +1,5 @@
-import type { CollectionEntry, Ownership, Recipe } from "../types";
-import { OWNERSHIP } from "../types";
+import type { CollectionEntry, Ownership, Recipe } from "../domain/types";
+import { OWNERSHIP } from "../domain/types";
 
 const COLLECTION_KEY = "paint-studio-miniatures:collection:v1";
 const RECIPES_KEY = "paint-studio-miniatures:recipes:v1";

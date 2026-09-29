@@ -1,5 +1,5 @@
 import { useLibrary } from "../hooks/libraryContext";
-import { OWNERSHIP, type Ownership } from "../types";
+import { OWNERSHIP, type Ownership } from "../../domain/types";
 
 interface OwnershipControlProps {
   code: string;

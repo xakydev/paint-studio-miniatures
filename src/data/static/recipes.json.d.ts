@@ -1,4 +1,4 @@
-import type { Recipe } from "../types";
+import type { Recipe } from "../../domain/types";
 
 declare const recipes: Recipe[];
 export default recipes;

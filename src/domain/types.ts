@@ -1,4 +1,4 @@
-import type { Lab } from "./lib/color";
+import type { Lab } from "./color";
 
 /**
  * Subgama de AK 3rd Generation a la que pertenece el bote.

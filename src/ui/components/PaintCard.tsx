@@ -1,5 +1,5 @@
 import { useLibrary } from "../hooks/libraryContext";
-import { PAINT_FAMILY_LABEL, type Paint } from "../types";
+import { PAINT_FAMILY_LABEL, type Paint } from "../../domain/types";
 import { OwnershipControl } from "./OwnershipControl";
 import { PaintSwatch } from "./PaintSwatch";
 

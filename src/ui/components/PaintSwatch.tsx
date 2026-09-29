@@ -1,4 +1,4 @@
-import { readableTextOn } from "../lib/color";
+import { readableTextOn } from "../../domain/color";
 
 interface PaintSwatchProps {
   hex: string;

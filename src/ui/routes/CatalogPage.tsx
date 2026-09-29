@@ -3,8 +3,9 @@ import { useState } from "react";
 import { FilterChips } from "../components/FilterChips";
 import { PaintCard } from "../components/PaintCard";
 import { useLibrary } from "../hooks/libraryContext";
-import { AVAILABLE_FAMILIES, PAINTS, filterPaints } from "../lib/catalog";
-import { PAINT_FAMILY_LABEL, type PaintFamily } from "../types";
+import { filterPaints } from "../../domain/catalog";
+import { PAINT_FAMILY_LABEL, type PaintFamily } from "../../domain/types";
+import { AVAILABLE_FAMILIES, PAINTS } from "../../data/static/catalogSource";
 
 /** Cuántas tarjetas se pintan de golpe: el resto llega al pulsar "ver más". */
 const PAGE_SIZE = 60;

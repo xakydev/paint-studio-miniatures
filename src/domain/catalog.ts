@@ -1,33 +1,11 @@
-import catalogJson from "../data/catalog.json";
-import recipesJson from "../data/recipes.json";
 import {
   PAINT_FAMILY_LABEL,
-  PAINT_FAMILY_ORDER,
   type Paint,
   type PaintFamily,
   type Recipe,
   type RecipeStep,
-} from "../types";
+} from "./types";
 import { ciede2000, hexToLab } from "./color";
-
-export const PAINTS: Paint[] = catalogJson.map((record) => ({
-  ...record,
-  lab: hexToLab(record.hex),
-}));
-export const RECIPES: Recipe[] = recipesJson;
-
-export const PAINT_BY_CODE: ReadonlyMap<string, Paint> = new Map(
-  PAINTS.map((paint) => [paint.code, paint]),
-);
-
-export function getPaint(code: string): Paint | undefined {
-  return PAINT_BY_CODE.get(code);
-}
-
-/** Las familias que realmente aparecen en los datos, en orden de uso. */
-export const AVAILABLE_FAMILIES: PaintFamily[] = PAINT_FAMILY_ORDER.filter(
-  (family) => PAINTS.some((paint) => paint.family === family),
-);
 
 export interface PaintFilters {
   query: string;
@@ -35,11 +13,6 @@ export interface PaintFilters {
   /** Restringe a estas referencias; se usa para ver solo lo que tienes. */
   codes?: ReadonlySet<string>;
 }
-
-export const EMPTY_FILTERS: PaintFilters = {
-  query: "",
-  families: [],
-};
 
 /**
  * Busca por nombre, referencia o gama. Se normaliza el texto para que "marrón"
@@ -85,12 +58,13 @@ export interface MatchOptions {
 }
 
 export function findClosestPaints(
+  paints: Paint[],
   hex: string,
   { limit = 8, families, codes }: MatchOptions = {},
 ): PaintMatch[] {
   const target = hexToLab(hex);
 
-  const pool = PAINTS.filter((paint) => {
+  const pool = paints.filter((paint) => {
     if (codes && !codes.has(paint.code)) return false;
     if (families && families.length > 0 && !families.includes(paint.family)) {
       return false;
@@ -159,14 +133,15 @@ export function recipeCoverage(
  * tienes. Es la pregunta real en la mesa: "no tengo esta, ¿con cuál tiro?".
  */
 export function substitutesFromCollection(
+  paints: Paint[],
   code: string,
   ownedCodes: ReadonlySet<string>,
   limit = 3,
 ): PaintMatch[] {
-  const paint = getPaint(code);
+  const paint = paints.find((candidate) => candidate.code === code);
   if (!paint || ownedCodes.size === 0) return [];
 
-  return findClosestPaints(paint.hex, { limit, codes: ownedCodes });
+  return findClosestPaints(paints, paint.hex, { limit, codes: ownedCodes });
 }
 
 export function stepsOf(recipe: Recipe): RecipeStep[] {

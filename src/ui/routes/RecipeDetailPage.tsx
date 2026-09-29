@@ -5,15 +5,15 @@ import { PaintSwatch } from "../components/PaintSwatch";
 import { useLibrary } from "../hooks/libraryContext";
 import {
   describeDelta,
-  getPaint,
   recipeCoverage,
   substitutesFromCollection,
-} from "../lib/catalog";
+} from "../../domain/catalog";
 import {
   DIFFICULTY_LABEL,
   STEP_ROLE_LABEL,
   type RecipeStep,
-} from "../types";
+} from "../../domain/types";
+import { PAINTS, getPaint } from "../../data/static/catalogSource";
 
 function StepRow({ step }: { step: RecipeStep }) {
   const { ownedCodes } = useLibrary();
@@ -30,7 +30,7 @@ function StepRow({ step }: { step: RecipeStep }) {
   const isOwned = ownedCodes.has(paint.code);
   const substitutes = isOwned
     ? []
-    : substitutesFromCollection(paint.code, ownedCodes, 2);
+    : substitutesFromCollection(PAINTS, paint.code, ownedCodes, 2);
 
   return (
     <li

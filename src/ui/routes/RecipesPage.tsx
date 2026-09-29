@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 
 import { PaintSwatch } from "../components/PaintSwatch";
 import { useLibrary } from "../hooks/libraryContext";
-import { getPaint, recipeCodes, recipeCoverage } from "../lib/catalog";
-import { DIFFICULTY_LABEL, type Recipe } from "../types";
+import { recipeCodes, recipeCoverage } from "../../domain/catalog";
+import { DIFFICULTY_LABEL, type Recipe } from "../../domain/types";
+import { getPaint } from "../../data/static/catalogSource";
 
 function matches(recipe: Recipe, query: string): boolean {
   if (!query.trim()) return true;

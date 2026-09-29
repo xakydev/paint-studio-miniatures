@@ -1,14 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-import { RECIPES } from "../lib/catalog";
+import { RECIPES } from "../../data/static/catalogSource";
 import {
   loadCollection,
   loadCustomRecipes,
   makeEntry,
   saveCollection,
   saveCustomRecipes,
-} from "../lib/storage";
-import { OWNERSHIP, type CollectionEntry, type Ownership, type Recipe } from "../types";
+} from "../../lib/storage";
+import { OWNERSHIP, type CollectionEntry, type Ownership, type Recipe } from "../../domain/types";
 import { LibraryContext, type LibraryApi } from "./libraryContext";
 
 export function LibraryProvider({ children }: { children: ReactNode }) {

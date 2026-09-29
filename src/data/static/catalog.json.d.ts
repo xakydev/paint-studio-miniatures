@@ -1,4 +1,4 @@
-import type { PaintRecord } from "../types";
+import type { PaintRecord } from "../../domain/types";
 
 /**
  * Generado por `npm run build:catalog`. Se tipa a mano en vez de dejar que
