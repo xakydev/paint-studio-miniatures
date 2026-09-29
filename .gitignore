@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# artefactos de trabajo de xakydev-teams
+.sdd/
