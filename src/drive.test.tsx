@@ -258,6 +258,42 @@ describe("registros borrados", () => {
     expect(container.textContent).toContain("Armadura");
   });
 
+  it("exportar el respaldo incluye una entrada borrada con su deletedAt", async () => {
+    storeCollection([entry("AK11179", "owned"), entry("AK11181", "owned", DELETED_AT)]);
+    go("/coleccion");
+    await render();
+
+    // No hay descarga real en jsdom: se intercepta el Blob que produce el
+    // botón "Exportar", sin tocar el código de producción.
+    let captured: Blob | null = null;
+    const createObjectURL = vi
+      .spyOn(URL, "createObjectURL")
+      .mockImplementation((blob) => {
+        captured = blob as Blob;
+        return "blob:mock";
+      });
+    const revokeObjectURL = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    // El `link.click()` de la descarga haría que jsdom intentara navegar a la
+    // URL blob: y avisara de que no sabe hacerlo. Aquí solo interesa el Blob.
+    const followLink = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+
+    try {
+      click(buttonWith("Exportar"));
+    } finally {
+      createObjectURL.mockRestore();
+      revokeObjectURL.mockRestore();
+      followLink.mockRestore();
+    }
+
+    expect(captured).not.toBeNull();
+    const backup = JSON.parse(await captured!.text()) as { collection: StoredEntry[] };
+    expect(backup.collection.map((e) => e.code).sort()).toEqual(["AK11179", "AK11181"]);
+    const deleted = backup.collection.find((e) => e.code === "AK11181");
+    expect(deleted?.deletedAt).toBe(DELETED_AT);
+  });
+
   it("quitar una pintura la deja en localStorage con deletedAt", async () => {
     storeCollection([entry("AK11191", "wishlist")]);
     go("/coleccion");
@@ -319,5 +355,39 @@ describe("registros borrados", () => {
     // Y sigue así al recargar.
     await remount();
     expect(container.textContent).toContain("1 en el armario");
+  });
+
+  it("importar un respaldo con una entrada borrada la conserva borrada y fuera del armario", async () => {
+    storeCollection([entry("AK11179", "owned")]);
+    go("/coleccion");
+    await render();
+    expect(container.textContent).toContain("1 en el armario");
+
+    const backup = {
+      version: 1,
+      exportedAt: "2026-03-01T00:00:00.000Z",
+      collection: [entry("AK11179", "owned", DELETED_AT)],
+      recipes: [],
+    };
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    const file = new File([JSON.stringify(backup)], "respaldo.json", {
+      type: "application/json",
+    });
+    Object.defineProperty(input, "files", { value: [file], configurable: true });
+    await act(async () => {
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain("Importadas 1 pinturas.");
+    expect(container.textContent).toContain("0 en el armario");
+    expect(container.textContent).not.toContain("Ultramarine");
+
+    const [stored] = storedCollection();
+    expect(stored?.code).toBe("AK11179");
+    expect(stored?.deletedAt).toBe(DELETED_AT);
+
+    // Y sigue borrada al recargar.
+    await remount();
+    expect(container.textContent).toContain("0 en el armario");
   });
 });

@@ -44,11 +44,13 @@ npm run dev        # http://localhost:5173 (también accesible desde el móvil e
 data/raw/               Tablas de pinturas de terceros, vendorizadas sin tocar
 data/overrides.json     Nuestras correcciones sobre esa fuente
 scripts/                build-catalog.ts: raw + overrides → src/data/static/catalog.json
-src/domain/color.ts     Conversión sRGB→CIELAB y distancia CIEDE2000
-src/domain/catalog.ts   Búsqueda, filtros, matching y cobertura de recetas
-src/lib/storage.ts      Persistencia en localStorage y respaldos
+src/domain/             Tipos, reglas puras y transiciones: color, catálogo,
+                        borrado lógico, fusión de recetas, respaldo
+src/data/ports/         Contratos de persistencia (CollectionRepository, RecipeRepository)
+src/data/local/         Adaptador de localStorage que implementa esos puertos
+src/data/memory/        Adaptador en memoria, para tests
 src/data/static/        catalog.json (generado) y recipes.json (semilla editable)
-src/ui/routes/          Una página por sección
+src/ui/                 Componentes, páginas y el LibraryProvider que las conecta
 ```
 
 **Por qué CIEDE2000 y no distancia RGB.** Dos colores pueden estar cerca en RGB
@@ -59,6 +61,39 @@ es indistinguible y ΔE > 10 son colores claramente distintos.
 
 La implementación está verificada contra los vectores de Sharma, Wu & Dalal
 (2005), el juego de pruebas canónico del estándar (`src/domain/color.test.ts`).
+
+## Arquitectura
+
+Tres capas con dependencias en un solo sentido: `ui → data → domain`. `domain`
+tiene los tipos y las reglas puras (borrado lógico, fusión de recetas, color);
+`data` lee y escribe a través de los puertos que `domain` no conoce; `ui`
+renderiza y llama a `data` mediante el `LibraryProvider`. `domain` no importa
+de `data` ni de `ui`, y `data` no importa de `ui`: lo impone `oxlint`
+(`no-restricted-imports` en `.oxlintrc.json`), así que una dependencia en el
+sentido equivocado rompe `npm run lint`, no solo la revisión de código.
+
+Los repositorios (`CollectionRepository`, `RecipeRepository`, en
+`src/data/ports/`) son puertos asíncronos con `load`, `upsert` y `subscribe`
+— no hay `delete`. Sin una operación de borrado físico, ningún adaptador
+puede perder datos por accidente: solo puede fundir por clave y sobrescribir,
+nunca eliminar filas que no le pasas explícitamente.
+El adaptador de localStorage va más lejos: funde sobre lo guardado en bruto,
+así que un registro que no sabe leer (de otra versión, con un campo nuevo) se
+conserva aunque no se muestre, y un valor ilegible se aparta a
+`<clave>:corrupt:<fecha>` antes de escribir encima, para rescatarlo a mano.
+
+Por eso quitar una pintura o una receta propia es un borrado lógico: la
+entrada se marca con `deletedAt` en vez de desaparecer, nunca se purga, y las
+vistas la excluyen filtrando por ese campo. Un respaldo exportado incluye
+también lo borrado, así que importar un respaldo antiguo puede recuperarlo.
+Vaciar la colección y descartar una pintura ausente de un respaldo importado
+son, por dentro, el mismo mecanismo: un `upsert` con `deletedAt`.
+
+Las claves `paint-studio-miniatures:collection:v1` y
+`paint-studio-miniatures:recipes:v1` de localStorage son un contrato: cambiar
+su nombre, o el formato de lo que guardan bajo la misma clave, perdería los
+datos de quien ya tiene la app instalada. Un registro antiguo sin `deletedAt`
+se sigue leyendo sin error y se trata como activo.
 
 ## Editar los datos
 
