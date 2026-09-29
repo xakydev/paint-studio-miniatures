@@ -1,5 +1,5 @@
 import { useLibrary } from "../hooks/libraryContext";
-import { PAINT_FAMILY_LABEL, PAINT_LINE_LABEL, type Paint } from "../types";
+import { PAINT_FAMILY_LABEL, type Paint } from "../types";
 import { OwnershipControl } from "./OwnershipControl";
 import { PaintSwatch } from "./PaintSwatch";
 
@@ -31,8 +31,7 @@ export function PaintCard({ paint, delta, deltaLabel }: PaintCardProps) {
         </div>
 
         <p className="mt-1 truncate text-xs text-neutral-500">
-          {PAINT_LINE_LABEL[paint.line]} ·{" "}
-          {paint.families.map((family) => PAINT_FAMILY_LABEL[family]).join(", ")}
+          {PAINT_FAMILY_LABEL[paint.family]}
         </p>
 
         {delta !== undefined && (

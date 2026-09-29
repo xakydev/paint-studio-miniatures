@@ -1,9 +1,10 @@
 import catalogJson from "../data/catalog.json";
 import recipesJson from "../data/recipes.json";
 import {
+  PAINT_FAMILY_LABEL,
+  PAINT_FAMILY_ORDER,
   type Paint,
   type PaintFamily,
-  type PaintLine,
   type Recipe,
   type RecipeStep,
 } from "../types";
@@ -23,18 +24,13 @@ export function getPaint(code: string): Paint | undefined {
   return PAINT_BY_CODE.get(code);
 }
 
-/** Las líneas y familias que realmente aparecen en los datos, ya ordenadas. */
-export const AVAILABLE_LINES: PaintLine[] = [
-  ...new Set(PAINTS.map((paint) => paint.line)),
-].sort();
-
-export const AVAILABLE_FAMILIES: PaintFamily[] = [
-  ...new Set(PAINTS.flatMap((paint) => paint.families)),
-].sort();
+/** Las familias que realmente aparecen en los datos, en orden de uso. */
+export const AVAILABLE_FAMILIES: PaintFamily[] = PAINT_FAMILY_ORDER.filter(
+  (family) => PAINTS.some((paint) => paint.family === family),
+);
 
 export interface PaintFilters {
   query: string;
-  lines: PaintLine[];
   families: PaintFamily[];
   /** Restringe a estas referencias; se usa para ver solo lo que tienes. */
   codes?: ReadonlySet<string>;
@@ -42,7 +38,6 @@ export interface PaintFilters {
 
 export const EMPTY_FILTERS: PaintFilters = {
   query: "",
-  lines: [],
   families: [],
 };
 
@@ -62,19 +57,15 @@ export function filterPaints(paints: Paint[], filters: PaintFilters): Paint[] {
 
   return paints.filter((paint) => {
     if (filters.codes && !filters.codes.has(paint.code)) return false;
-    if (filters.lines.length > 0 && !filters.lines.includes(paint.line)) {
-      return false;
-    }
-    if (
-      filters.families.length > 0 &&
-      !paint.families.some((family) => filters.families.includes(family))
-    ) {
+    if (filters.families.length > 0 && !filters.families.includes(paint.family)) {
       return false;
     }
     if (terms.length === 0) return true;
 
+    // La familia entra en la búsqueda por su etiqueta visible: quien teclea
+    // "metálicos" espera los metálicos, no tiene por qué saber el código interno.
     const haystack = normalize(
-      `${paint.code} ${paint.name} ${paint.sets.join(" ")}`,
+      `${paint.code} ${paint.name} ${PAINT_FAMILY_LABEL[paint.family]}`,
     );
     return terms.every((term) => haystack.includes(term));
   });
@@ -88,7 +79,6 @@ export interface PaintMatch {
 
 export interface MatchOptions {
   limit?: number;
-  lines?: PaintLine[];
   families?: PaintFamily[];
   /** Si se pasa, solo se compara contra estas referencias. */
   codes?: ReadonlySet<string>;
@@ -96,18 +86,13 @@ export interface MatchOptions {
 
 export function findClosestPaints(
   hex: string,
-  { limit = 8, lines, families, codes }: MatchOptions = {},
+  { limit = 8, families, codes }: MatchOptions = {},
 ): PaintMatch[] {
   const target = hexToLab(hex);
 
   const pool = PAINTS.filter((paint) => {
     if (codes && !codes.has(paint.code)) return false;
-    if (lines && lines.length > 0 && !lines.includes(paint.line)) return false;
-    if (
-      families &&
-      families.length > 0 &&
-      !paint.families.some((family) => families.includes(family))
-    ) {
+    if (families && families.length > 0 && !families.includes(paint.family)) {
       return false;
     }
     return true;

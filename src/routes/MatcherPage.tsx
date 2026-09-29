@@ -1,17 +1,14 @@
 import { useState } from "react";
 
-import { FilterChips } from "../components/FilterChips";
 import { PaintCard } from "../components/PaintCard";
 import { useLibrary } from "../hooks/libraryContext";
-import { AVAILABLE_LINES, describeDelta, findClosestPaints } from "../lib/catalog";
+import { describeDelta, findClosestPaints } from "../lib/catalog";
 import { extractDominantColors, type DominantColor } from "../lib/imageColors";
 import { readableTextOn } from "../lib/color";
-import { PAINT_LINE_LABEL, type PaintLine } from "../types";
 
 export function MatcherPage() {
   const { ownedCodes } = useLibrary();
   const [hex, setHex] = useState("#7A4231");
-  const [lines, setLines] = useState<PaintLine[]>([]);
   const [onlyOwned, setOnlyOwned] = useState(false);
   const [palette, setPalette] = useState<DominantColor[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -19,7 +16,6 @@ export function MatcherPage() {
 
   const matches = findClosestPaints(hex, {
     limit: 12,
-    lines,
     codes: onlyOwned ? ownedCodes : undefined,
   });
 
@@ -45,7 +41,7 @@ export function MatcherPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-xl font-semibold">Buscar pintura por color</h1>
         <p className="max-w-2xl text-sm text-neutral-400">
-          Elige un color o sube la foto de una miniatura y se comparan las 1.130
+          Elige un color o sube la foto de una miniatura y se comparan las 286
           referencias del catálogo en CIELAB con CIEDE2000, que ordena por
           parecido real al ojo y no por cercanía numérica en RGB.
         </p>
@@ -120,18 +116,6 @@ export function MatcherPage() {
             </div>
           )}
 
-          <FilterChips
-            values={AVAILABLE_LINES}
-            selected={lines}
-            labels={PAINT_LINE_LABEL}
-            onToggle={(value) =>
-              setLines((current) =>
-                current.includes(value)
-                  ? current.filter((item) => item !== value)
-                  : [...current, value],
-              )
-            }
-          />
 
           <label className="flex w-fit items-center gap-2 text-sm text-neutral-400">
             <input

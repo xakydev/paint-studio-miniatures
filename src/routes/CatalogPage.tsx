@@ -3,20 +3,10 @@ import { useState } from "react";
 import { FilterChips } from "../components/FilterChips";
 import { PaintCard } from "../components/PaintCard";
 import { useLibrary } from "../hooks/libraryContext";
-import {
-  AVAILABLE_FAMILIES,
-  AVAILABLE_LINES,
-  PAINTS,
-  filterPaints,
-} from "../lib/catalog";
-import {
-  PAINT_FAMILY_LABEL,
-  PAINT_LINE_LABEL,
-  type PaintFamily,
-  type PaintLine,
-} from "../types";
+import { AVAILABLE_FAMILIES, PAINTS, filterPaints } from "../lib/catalog";
+import { PAINT_FAMILY_LABEL, type PaintFamily } from "../types";
 
-/** Cuántas tarjetas se pintan de golpe. Mil swatches a la vez van lentos. */
+/** Cuántas tarjetas se pintan de golpe: el resto llega al pulsar "ver más". */
 const PAGE_SIZE = 60;
 
 function toggle<T>(list: T[], value: T): T[] {
@@ -28,14 +18,12 @@ function toggle<T>(list: T[], value: T): T[] {
 export function CatalogPage() {
   const { ownedCodes } = useLibrary();
   const [query, setQuery] = useState("");
-  const [lines, setLines] = useState<PaintLine[]>([]);
   const [families, setFamilies] = useState<PaintFamily[]>([]);
   const [onlyOwned, setOnlyOwned] = useState(false);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   const results = filterPaints(PAINTS, {
     query,
-    lines,
     families,
     codes: onlyOwned ? ownedCodes : undefined,
   });
@@ -55,18 +43,8 @@ export function CatalogPage() {
             setQuery(event.target.value);
             resetPaging();
           }}
-          placeholder="Buscar por nombre, referencia o gama…"
+          placeholder="Buscar por nombre, referencia o familia…"
           className="w-full rounded-lg border border-white/10 bg-neutral-900 px-3 py-2 text-sm outline-none placeholder:text-neutral-600 focus:border-sky-500"
-        />
-
-        <FilterChips
-          values={AVAILABLE_LINES}
-          selected={lines}
-          labels={PAINT_LINE_LABEL}
-          onToggle={(value) => {
-            setLines((current) => toggle(current, value));
-            resetPaging();
-          }}
         />
 
         <FilterChips

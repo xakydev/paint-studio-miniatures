@@ -1,7 +1,7 @@
 /**
- * Convierte las tablas markdown de `data/raw/` en `src/data/catalog.json`.
+ * Convierte las tablas markdown de `data/raw/` en `src/data/catalog.json`,
+ * aplicando encima las correcciones de `data/overrides.json`.
  *
-
  * Uso: npm run build:catalog
  */
 
@@ -11,10 +11,9 @@ import { fileURLToPath } from "node:url";
 
 import {
   PAINT_FAMILY,
-  PAINT_LINE,
-  type PaintRecord,
+  PAINT_FAMILY_ORDER,
   type PaintFamily,
-  type PaintLine,
+  type PaintRecord,
 } from "../src/types.ts";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,24 +25,24 @@ interface RawRow {
   hex: string;
 }
 
-/** Palabra clave de la gama → subfamilia. El orden no importa, son exclusivas. */
-const FAMILY_BY_KEYWORD: ReadonlyArray<readonly [string, PaintFamily]> = [
-  ["metallic", PAINT_FAMILY.METALLIC],
-  ["ink", PAINT_FAMILY.INK],
-  ["primer", PAINT_FAMILY.PRIMER],
-  ["intense", PAINT_FAMILY.INTENSE],
-  ["pastel", PAINT_FAMILY.PASTEL],
-  ["auxiliary", PAINT_FAMILY.AUXILIARY],
-  ["figures", PAINT_FAMILY.FIGURES],
-  ["afv", PAINT_FAMILY.AFV],
-  ["air", PAINT_FAMILY.AIR],
-  ["naval", PAINT_FAMILY.NAVAL],
-  ["modern", PAINT_FAMILY.MODERN],
-  ["wwii", PAINT_FAMILY.WWII],
-  ["clear", PAINT_FAMILY.CLEAR],
-  ["standard", PAINT_FAMILY.STANDARD],
-  ["general", PAINT_FAMILY.GENERAL],
-];
+/**
+ * Gamas que entran en el catálogo, y a qué familia corresponde cada una.
+ *
+ * Fuera quedan Air y AFV pese a ser 3rd Gen: son cartas RAL/FS de camuflaje de
+ * aviación y blindados, 200 referencias que solo añaden ruido a las búsquedas
+ * de quien pinta miniaturas. Fuera quedan también la gama clásica y Real
+ * Colors. Para incluir una gama, añádela aquí con su familia.
+ */
+const FAMILIA_POR_GAMA: ReadonlyMap<string, PaintFamily> = new Map([
+  ["Standard (3rd Gen)", PAINT_FAMILY.STANDARD],
+  ["Figures (3rd Gen)", PAINT_FAMILY.FIGURES],
+  ["Metallic (3rd Gen)", PAINT_FAMILY.METALLIC],
+  ["Ink (3rd Gen)", PAINT_FAMILY.INK],
+  ["Intense (3rd Gen)", PAINT_FAMILY.INTENSE],
+  ["Pastel (3rd Gen)", PAINT_FAMILY.PASTEL],
+  ["Primer (3rd Gen)", PAINT_FAMILY.PRIMER],
+  ["Auxiliary (3rd Gen)", PAINT_FAMILY.AUXILIARY],
+]);
 
 function parseMarkdownTable(markdown: string): RawRow[] {
   const rows: RawRow[] = [];
@@ -67,72 +66,233 @@ function parseMarkdownTable(markdown: string): RawRow[] {
   return rows;
 }
 
-function lineOf(set: string): PaintLine {
-  const lower = set.toLowerCase();
-  if (lower.includes("real colors")) return PAINT_LINE.REAL_COLORS;
-  if (lower.includes("3rd gen")) return PAINT_LINE.THIRD_GEN;
-  return PAINT_LINE.CLASSIC;
-}
-
-function familyOf(set: string): PaintFamily {
-  const lower = set.toLowerCase();
-  const hit = FAMILY_BY_KEYWORD.find(([keyword]) => lower.includes(keyword));
-  return hit ? hit[1] : PAINT_FAMILY.GENERAL;
-}
-
-/**
- * Limpia el nombre: la gama Real Colors trae el volumen pegado al nombre
- * ("A-14 Interior Steel Grey 10ml") y eso ensucia la búsqueda.
- */
+/** Limpia el nombre: algunas filas traen el volumen pegado ("... 10ml"). */
 function cleanName(name: string): string {
   return name.replace(/\s+\d+\s*ml$/i, "").trim();
 }
 
-function buildCatalog(): PaintRecord[] {
-  const files = ["AK.md", "AKRC.md"];
+/** Referencias tal y como salen de `data/raw/`, sin tocar. */
+function readVendored(): Map<string, PaintRecord> {
   const byCode = new Map<string, PaintRecord>();
 
-  for (const file of files) {
-    const markdown = readFileSync(resolve(projectRoot, "data/raw", file), "utf8");
+  // Solo AK.md: AKRC.md (Real Colors) no trae ninguna gama de 3rd Generation.
+  const markdown = readFileSync(resolve(projectRoot, "data/raw/AK.md"), "utf8");
 
-    for (const row of parseMarkdownTable(markdown)) {
-      const existing = byCode.get(row.code);
-      const family = familyOf(row.set);
+  for (const row of parseMarkdownTable(markdown)) {
+    const family = FAMILIA_POR_GAMA.get(row.set);
+    if (!family) continue;
+    if (byCode.has(row.code)) continue;
 
-      // Una misma referencia aparece repetida en varias gamas (p. ej. RC319 está
-      // en "Real Colors - Air" y en "- WWII"). Se fusiona en una sola entrada.
-      if (existing) {
-        if (!existing.sets.includes(row.set)) existing.sets.push(row.set);
-        if (!existing.families.includes(family)) existing.families.push(family);
-        continue;
-      }
-
-      byCode.set(row.code, {
-        code: row.code,
-        name: cleanName(row.name),
-        line: lineOf(row.set),
-        families: [family],
-        sets: [row.set],
-        hex: row.hex,
-      });
-    }
+    byCode.set(row.code, {
+      code: row.code,
+      name: cleanName(row.name),
+      family,
+      hex: row.hex,
+    });
   }
 
-  return [...byCode.values()].sort((a, b) =>
-    a.code.localeCompare(b.code, "en", { numeric: true }),
-  );
+  return byCode;
 }
 
-const catalog = buildCatalog();
-const outputPath = resolve(projectRoot, "src/data/catalog.json");
-writeFileSync(outputPath, `${JSON.stringify(catalog, null, 0)}\n`, "utf8");
+// --- Capa de correcciones --------------------------------------------------
 
-const byLine = catalog.reduce<Record<string, number>>((acc, paint) => {
-  acc[paint.line] = (acc[paint.line] ?? 0) + 1;
-  return acc;
-}, {});
+/** Campos corregibles de una referencia que ya existe en la fuente. */
+interface OverrideFix {
+  name?: string;
+  family?: PaintFamily;
+  hex?: string;
+  why: string;
+}
 
-console.log(`catalog.json: ${catalog.length} referencias`);
-for (const [line, count] of Object.entries(byLine)) {
-  console.log(`  ${line.padEnd(12)} ${count}`);
+/** Referencia que la fuente no trae y añadimos a mano. */
+interface OverrideAdd {
+  name: string;
+  family: PaintFamily;
+  hex: string;
+  why: string;
+}
+
+interface OverrideDrop {
+  why: string;
+}
+
+interface Overrides {
+  fix: Record<string, OverrideFix>;
+  add: Record<string, OverrideAdd>;
+  drop: Record<string, OverrideDrop>;
+}
+
+const HEX_PATTERN = /^#[0-9A-F]{6}$/;
+
+/** Errores acumulados: se informan todos juntos antes de abortar. */
+const problems: string[] = [];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isFamily(value: unknown): value is PaintFamily {
+  return PAINT_FAMILY_ORDER.includes(value as PaintFamily);
+}
+
+/**
+ * Valida un bloque del fichero de overrides. Devuelve las entradas bien
+ * formadas y apunta en `problems` las que no lo estén, para que un override
+ * mal escrito no se cuele en silencio.
+ */
+function readSection(
+  raw: unknown,
+  section: string,
+  required: readonly string[],
+): Map<string, Record<string, unknown>> {
+  const entries = new Map<string, Record<string, unknown>>();
+  if (raw === undefined) return entries;
+
+  if (!isRecord(raw)) {
+    problems.push(`"${section}" debe ser un objeto indexado por referencia.`);
+    return entries;
+  }
+
+  for (const [code, entry] of Object.entries(raw)) {
+    const where = `${section}.${code}`;
+
+    if (!isRecord(entry)) {
+      problems.push(`${where}: debe ser un objeto.`);
+      continue;
+    }
+    if (typeof entry.why !== "string" || entry.why.trim() === "") {
+      problems.push(`${where}: falta "why" explicando la corrección.`);
+      continue;
+    }
+    const missing = required.filter((field) => entry[field] === undefined);
+    if (missing.length > 0) {
+      for (const field of missing) problems.push(`${where}: falta "${field}".`);
+      continue;
+    }
+    if (entry.hex !== undefined && !HEX_PATTERN.test(String(entry.hex))) {
+      problems.push(`${where}: "hex" debe ser #RRGGBB en mayúsculas.`);
+      continue;
+    }
+    if (entry.family !== undefined && !isFamily(entry.family)) {
+      problems.push(`${where}: familia desconocida "${String(entry.family)}".`);
+      continue;
+    }
+
+    entries.set(code, entry);
+  }
+
+  return entries;
+}
+
+function readOverrides(): Overrides {
+  const parsed: unknown = JSON.parse(
+    readFileSync(resolve(projectRoot, "data/overrides.json"), "utf8"),
+  );
+
+  if (!isRecord(parsed)) {
+    throw new Error("data/overrides.json debe contener un objeto.");
+  }
+
+  return {
+    fix: Object.fromEntries(
+      readSection(parsed.fix, "fix", []),
+    ) as Record<string, OverrideFix>,
+    add: Object.fromEntries(
+      readSection(parsed.add, "add", ["name", "family", "hex"]),
+    ) as Record<string, OverrideAdd>,
+    drop: Object.fromEntries(
+      readSection(parsed.drop, "drop", []),
+    ) as Record<string, OverrideDrop>,
+  };
+}
+
+/**
+ * Aplica las correcciones sobre lo que trae la fuente.
+ *
+ * Cada override se comprueba contra la fuente y el build aborta si alguno ha
+ * quedado obsoleto: así, cuando el repo de terceros se actualice, el propio
+ * build nos dirá qué correcciones ya no hacen falta en vez de arrastrarlas.
+ */
+function applyOverrides(
+  byCode: Map<string, PaintRecord>,
+  overrides: Overrides,
+): void {
+  for (const [code, fix] of Object.entries(overrides.fix)) {
+    const current = byCode.get(code);
+    if (!current) {
+      problems.push(`fix.${code}: la fuente ya no trae esa referencia.`);
+      continue;
+    }
+
+    const patch: Partial<PaintRecord> = {};
+    if (fix.name !== undefined && fix.name !== current.name) patch.name = fix.name;
+    if (fix.family !== undefined && fix.family !== current.family) {
+      patch.family = fix.family;
+    }
+    if (fix.hex !== undefined && fix.hex !== current.hex) patch.hex = fix.hex;
+
+    if (Object.keys(patch).length === 0) {
+      problems.push(`fix.${code}: redundante, la fuente ya dice lo mismo. Bórralo.`);
+      continue;
+    }
+
+    byCode.set(code, { ...current, ...patch });
+  }
+
+  for (const [code, add] of Object.entries(overrides.add)) {
+    if (byCode.has(code)) {
+      problems.push(`add.${code}: ya está en la fuente. Muévelo a "fix".`);
+      continue;
+    }
+    byCode.set(code, {
+      code,
+      name: add.name,
+      family: add.family,
+      hex: add.hex,
+    });
+  }
+
+  for (const code of Object.keys(overrides.drop)) {
+    if (!byCode.delete(code)) {
+      problems.push(`drop.${code}: la fuente ya no trae esa referencia. Bórralo.`);
+    }
+  }
+}
+
+// --- Build ----------------------------------------------------------------
+
+const byCode = readVendored();
+const overrides = readOverrides();
+applyOverrides(byCode, overrides);
+
+if (problems.length > 0) {
+  console.error("data/overrides.json tiene problemas:");
+  for (const problem of problems) console.error(`  - ${problem}`);
+  process.exit(1);
+}
+
+const catalog = [...byCode.values()].sort((a, b) =>
+  a.code.localeCompare(b.code, "en", { numeric: true }),
+);
+
+writeFileSync(
+  resolve(projectRoot, "src/data/catalog.json"),
+  `${JSON.stringify(catalog, null, 0)}\n`,
+  "utf8",
+);
+
+const porFamilia = new Map<PaintFamily, number>();
+for (const paint of catalog) {
+  porFamilia.set(paint.family, (porFamilia.get(paint.family) ?? 0) + 1);
+}
+
+const corrections =
+  Object.keys(overrides.fix).length +
+  Object.keys(overrides.add).length +
+  Object.keys(overrides.drop).length;
+
+console.log(`catalog.json: ${catalog.length} referencias (${corrections} correcciones)`);
+for (const family of PAINT_FAMILY_ORDER) {
+  const count = porFamilia.get(family);
+  if (count) console.log(`  ${family.padEnd(10)} ${count}`);
 }

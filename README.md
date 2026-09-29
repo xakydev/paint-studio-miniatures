@@ -6,9 +6,11 @@ cuenta, y la colección se guarda en el propio equipo.
 
 ## Qué hace
 
-- **Catálogo** — 1.130 referencias AK (3rd Generation, gama clásica y Real
-  Colors) con swatch, referencia y gama. Búsqueda por nombre, código o gama,
-  insensible a tildes, y filtros por línea y familia.
+- **Catálogo** — 286 referencias de AK 3rd Generation pensadas para miniatura:
+  Standard, Figures, Metallic, The Inks, Intense, Pastel, imprimaciones y
+  auxiliares. Búsqueda por nombre, código o gama, insensible a tildes, y filtros
+  por familia. Las subgamas Air y AFV quedan fuera a propósito: son cartas
+  RAL/FS de camuflaje para maqueta histórica.
 - **Recetas** — esquemas de pintado organizados por zona de la miniatura (piel,
   armadura, metales, peana…) y por rol dentro de la zona (base, sombra, lavado,
   luz, filo). Cada receta te dice cuántas referencias tienes ya y cuáles faltan,
@@ -39,8 +41,9 @@ npm run dev        # http://localhost:5173 (también accesible desde el móvil e
 ## Cómo está montado
 
 ```
-data/raw/            Tablas de pinturas en markdown (fuente editable)
-scripts/             build-catalog.ts: markdown → src/data/catalog.json
+data/raw/            Tablas de pinturas de terceros, vendorizadas sin tocar
+data/overrides.json  Nuestras correcciones sobre esa fuente
+scripts/             build-catalog.ts: raw + overrides → src/data/catalog.json
 src/lib/color.ts     Conversión sRGB→CIELAB y distancia CIEDE2000
 src/lib/catalog.ts   Búsqueda, filtros, matching y cobertura de recetas
 src/lib/storage.ts   Persistencia en localStorage y respaldos
@@ -65,17 +68,39 @@ a una referencia inexistente, así que un código mal escrito sale en `npm test`
 Las recetas que crees desde la app se guardan aparte, en el navegador, y una
 receta propia con el mismo `id` reemplaza a la de semilla.
 
-**Catálogo.** No edites `src/data/catalog.json` a mano: se regenera. Corrige
-`data/raw/AK.md` o `data/raw/AKRC.md` y ejecuta `npm run build:catalog`.
+**Catálogo.** No edites `src/data/catalog.json` a mano: se regenera. Tampoco
+edites `data/raw/`: son ficheros de terceros que conviene poder actualizar de
+golpe. Las correcciones van en `data/overrides.json`, que el build aplica encima
+de la fuente y así sobreviven a refrescar los datos:
+
+```json
+{
+  "fix":  { "AK11001": { "family": "standard", "why": "la fuente lo marca Intense" } },
+  "add":  { "AK11999": { "name": "…", "family": "ink", "hex": "#112233", "why": "…" } },
+  "drop": { "AK11998": { "why": "…" } }
+}
+```
+
+`fix` corrige `name`, `family` o `hex` de una referencia existente; `add` mete
+una que la fuente no trae; `drop` quita una. El campo `why` es obligatorio: un
+override sin motivo es indistinguible de una errata.
+
+El build valida cada entrada y **falla** si alguna ha quedado obsoleta —un `fix`
+que ya coincide con la fuente, un `add` de algo que ahora sí existe, un `drop`
+de algo que ya no está—. Así, al actualizar `data/raw/`, el propio
+`npm run build:catalog` dice qué correcciones borrar en vez de arrastrarlas para
+siempre.
 
 ## Sobre la precisión del color
 
 Los valores hex provienen de [Arcturus5404/miniature-paints][fuente] (MIT) y son
 **aproximaciones digitales** del color del bote, no medidas colorimétricas. Son
 buenas para buscar, comparar y decidir; no sustituyen a ver la pintura aplicada.
-Hay entradas concretas que se desvían —algunos grises de la 3rd Gen tiran a
-crema, y AK11001 y AK11029 aparecen clasificados bajo «Intense» en vez de
-«Standard»—. Todo eso se corrige en `data/raw/` y se regenera.
+Hay entradas concretas que se desvían: algunos grises de la 3rd Gen tiran a
+crema —AK11006 «Silver Grey» sale `#E2D7B7`, un beige— y la fuente clasifica
+AK11001 y AK11029 bajo «Intense» en vez de «Standard». Esas dos familias ya
+están corregidas en `data/overrides.json`; los hex desviados siguen pendientes
+de medir sobre pintura aplicada, no de adivinar.
 
 [fuente]: https://github.com/Arcturus5404/miniature-paints
 

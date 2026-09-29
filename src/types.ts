@@ -1,74 +1,60 @@
 import type { Lab } from "./lib/color";
 
-/** Línea comercial del bote. Determina formato, acabado y numeración. */
-export const PAINT_LINE = {
-  THIRD_GEN: "3gen",
-  CLASSIC: "classic",
-  REAL_COLORS: "real-colors",
-} as const;
-
-export type PaintLine = (typeof PAINT_LINE)[keyof typeof PAINT_LINE];
-
-export const PAINT_LINE_LABEL: Record<PaintLine, string> = {
-  [PAINT_LINE.THIRD_GEN]: "3rd Generation",
-  [PAINT_LINE.CLASSIC]: "Clásica",
-  [PAINT_LINE.REAL_COLORS]: "Real Colors",
-};
-
-/** Subgama dentro de la línea: para qué está pensado el color. */
+/**
+ * Subgama de AK 3rd Generation a la que pertenece el bote.
+ *
+ * El catálogo se limita a 3rd Generation, así que no hay una dimensión "línea"
+ * por encima de esto: sería una constante. Si algún día entran Quick Gen o los
+ * Washes, esa dimensión vuelve — pero hasta entonces solo estorbaría.
+ */
 export const PAINT_FAMILY = {
   STANDARD: "standard",
+  FIGURES: "figures",
   METALLIC: "metallic",
   INK: "ink",
-  PRIMER: "primer",
   INTENSE: "intense",
   PASTEL: "pastel",
+  PRIMER: "primer",
   AUXILIARY: "auxiliary",
-  FIGURES: "figures",
-  AFV: "afv",
-  AIR: "air",
-  NAVAL: "naval",
-  MODERN: "modern",
-  WWII: "wwii",
-  CLEAR: "clear",
-  GENERAL: "general",
 } as const;
 
 export type PaintFamily = (typeof PAINT_FAMILY)[keyof typeof PAINT_FAMILY];
 
 export const PAINT_FAMILY_LABEL: Record<PaintFamily, string> = {
   [PAINT_FAMILY.STANDARD]: "Estándar",
+  [PAINT_FAMILY.FIGURES]: "Figuras",
   [PAINT_FAMILY.METALLIC]: "Metálicos",
-  [PAINT_FAMILY.INK]: "Tintas",
-  [PAINT_FAMILY.PRIMER]: "Imprimaciones",
+  [PAINT_FAMILY.INK]: "The Inks",
   [PAINT_FAMILY.INTENSE]: "Intense",
   [PAINT_FAMILY.PASTEL]: "Pastel",
+  [PAINT_FAMILY.PRIMER]: "Imprimaciones",
   [PAINT_FAMILY.AUXILIARY]: "Auxiliares",
-  [PAINT_FAMILY.FIGURES]: "Figuras",
-  [PAINT_FAMILY.AFV]: "Blindados",
-  [PAINT_FAMILY.AIR]: "Aviación",
-  [PAINT_FAMILY.NAVAL]: "Naval",
-  [PAINT_FAMILY.MODERN]: "Moderno",
-  [PAINT_FAMILY.WWII]: "WWII",
-  [PAINT_FAMILY.CLEAR]: "Transparentes",
-  [PAINT_FAMILY.GENERAL]: "General",
 };
+
+/** Orden en que se muestran las familias: de lo más usado a lo más accesorio. */
+export const PAINT_FAMILY_ORDER: readonly PaintFamily[] = [
+  PAINT_FAMILY.STANDARD,
+  PAINT_FAMILY.FIGURES,
+  PAINT_FAMILY.METALLIC,
+  PAINT_FAMILY.INK,
+  PAINT_FAMILY.INTENSE,
+  PAINT_FAMILY.PASTEL,
+  PAINT_FAMILY.PRIMER,
+  PAINT_FAMILY.AUXILIARY,
+];
 
 /** Lo que se serializa en `catalog.json`. */
 export interface PaintRecord {
-  /** Referencia AK, p. ej. "AK11001" o "RC319". Única en todo el catálogo. */
+  /** Referencia AK, p. ej. "AK11001". Única en todo el catálogo. */
   code: string;
   name: string;
-  line: PaintLine;
-  families: PaintFamily[];
-  /** Nombres de gama tal y como los publica AK, para búsqueda literal. */
-  sets: string[];
+  family: PaintFamily;
   hex: string;
 }
 
 /**
- * El registro más su color en CIELAB. El Lab no se guarda en el JSON —son 94 kB
- * de decimales— sino que se calcula una sola vez al cargar el catálogo.
+ * El registro más su color en CIELAB. El Lab no se guarda en el JSON —son
+ * kilobytes de decimales— sino que se calcula una sola vez al cargar.
  */
 export interface Paint extends PaintRecord {
   lab: Lab;
@@ -102,7 +88,7 @@ export const STEP_ROLE_LABEL: Record<StepRole, string> = {
 };
 
 /** Orden en que se pintan los roles, para mostrar los pasos en secuencia. */
-export const STEP_ROLE_ORDER: StepRole[] = [
+export const STEP_ROLE_ORDER: readonly StepRole[] = [
   STEP_ROLE.PRIMER,
   STEP_ROLE.BASE,
   STEP_ROLE.SHADE,
@@ -143,17 +129,15 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 
 export interface Recipe {
   id: string;
-  /** Nombre del esquema: "Space Marine Ultramarines". */
+  /** Nombre del esquema: "Marine espacial azul". */
   name: string;
-  /** Qué se pinta: "Infantería de ciencia ficción", "Panzer IV"... */
+  /** Qué se pinta: "Infantería de ciencia ficción", "Orco"... */
   subject: string;
   faction?: string;
   summary: string;
   difficulty: Difficulty;
   tags: string[];
   zones: RecipeZone[];
-  /** true si la escribió el usuario en la app, false si viene de semilla. */
-  custom?: boolean;
 }
 
 export const OWNERSHIP = {

@@ -80,7 +80,7 @@ export function CollectionPage() {
   const addResults =
     query.trim().length === 0
       ? []
-      : filterPaints(PAINTS, { query, lines: [], families: [] }).slice(0, 40);
+      : filterPaints(PAINTS, { query, families: [] }).slice(0, 40);
 
   return (
     <section className="flex flex-col gap-5">

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PAINT_FAMILY_ORDER } from "../types";
 import {
   PAINTS,
   RECIPES,
@@ -24,8 +25,10 @@ describe("catálogo", () => {
     expect(invalid).toEqual([]);
   });
 
-  it("asigna al menos una familia a cada referencia", () => {
-    expect(PAINTS.every((paint) => paint.families.length > 0)).toBe(true);
+  it("asigna una familia conocida a cada referencia", () => {
+    expect(
+      PAINTS.every((paint) => PAINT_FAMILY_ORDER.includes(paint.family)),
+    ).toBe(true);
   });
 });
 
@@ -122,10 +125,10 @@ describe("filterPaints", () => {
     expect(results.map((paint) => paint.code)).toContain("AK11182");
   });
 
-  it("filtra por línea", () => {
-    const results = filterPaints(PAINTS, { ...EMPTY_FILTERS, lines: ["real-colors"] });
+  it("filtra por familia", () => {
+    const results = filterPaints(PAINTS, { ...EMPTY_FILTERS, families: ["metallic"] });
     expect(results.length).toBeGreaterThan(0);
-    expect(results.every((paint) => paint.line === "real-colors")).toBe(true);
+    expect(results.every((paint) => paint.family === "metallic")).toBe(true);
   });
 });
 
