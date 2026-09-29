@@ -14,13 +14,18 @@ export interface BackupFile {
   recipes: RecipeRecord[];
 }
 
+/**
+ * `exportedAt` llega de fuera (ISO 8601): leer el reloj aquí haría impuro a
+ * `domain`, y la hora es cosa de quien exporta.
+ */
 export function buildBackup(
   collection: CollectionEntry[],
   recipes: RecipeRecord[],
+  exportedAt: string,
 ): BackupFile {
   return {
     version: 1,
-    exportedAt: new Date().toISOString(),
+    exportedAt,
     collection,
     recipes,
   };

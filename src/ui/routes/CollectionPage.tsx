@@ -4,9 +4,7 @@ import { PaintCard } from "../components/PaintCard";
 import { PaintSwatch } from "../components/PaintSwatch";
 import { useLibrary } from "../hooks/libraryContext";
 import { filterPaints } from "../../domain/catalog";
-import { buildBackup, parseBackup } from "../../domain/backup";
-import { LEGACY_UPDATED_AT } from "../../domain/recipes";
-import type { RecipeRecord } from "../../domain/recipes";
+import { parseBackup } from "../../domain/backup";
 import { OWNERSHIP, type Paint } from "../../domain/types";
 import { PAINTS, getPaint } from "../../data/static/catalogSource";
 
@@ -36,9 +34,9 @@ export function CollectionPage() {
     entries,
     ownedCodes,
     wishlistCodes,
-    customRecipes,
     replaceCollection,
     clearCollection,
+    exportBackup: buildFullBackup,
     setStatus,
   } = useLibrary();
 
@@ -54,16 +52,9 @@ export function CollectionPage() {
   );
 
   const exportBackup = () => {
-    // El Provider aún guarda las recetas propias como `Recipe[]` planas, sin
-    // `updatedAt`: esa marca de tiempo real la añade la fase 5, cuando el
-    // Provider pase a usar los puertos. Mientras tanto se sintetiza con
-    // LEGACY_UPDATED_AT, que es como el adaptador trata a cualquier receta
-    // sin `updatedAt` propio.
-    const recipeRecords: RecipeRecord[] = customRecipes.map((recipe) => ({
-      ...recipe,
-      updatedAt: LEGACY_UPDATED_AT,
-    }));
-    const backup = buildBackup(entries, recipeRecords);
+    // El respaldo sale del Provider, con los registros borrados incluidos:
+    // `entries` ya viene filtrado y perdería los `deletedAt`.
+    const backup = buildFullBackup();
     const blob = new Blob([JSON.stringify(backup, null, 2)], {
       type: "application/json",
     });

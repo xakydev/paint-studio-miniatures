@@ -5,6 +5,8 @@ import { DIFFICULTY, OWNERSHIP } from "./types";
 import type { CollectionEntry } from "./types";
 import type { RecipeRecord } from "./recipes";
 
+const EXPORTED_AT = "2026-03-01T00:00:00.000Z";
+
 const ACTIVE_ENTRY: CollectionEntry = {
   code: "AK11001",
   status: OWNERSHIP.OWNED,
@@ -33,26 +35,30 @@ const DELETED_RECIPE: RecipeRecord = {
 };
 
 describe("buildBackup", () => {
+  it("usa el exportedAt que recibe en vez de leer el reloj", () => {
+    expect(buildBackup([], [], EXPORTED_AT).exportedAt).toBe(EXPORTED_AT);
+  });
+
   it("incluye las entradas de colección borradas con su deletedAt", () => {
-    const backup = buildBackup([ACTIVE_ENTRY, DELETED_ENTRY], []);
+    const backup = buildBackup([ACTIVE_ENTRY, DELETED_ENTRY], [], EXPORTED_AT);
     expect(backup.collection).toContainEqual(DELETED_ENTRY);
   });
 
   it("incluye las recetas propias borradas con su deletedAt", () => {
-    const backup = buildBackup([], [DELETED_RECIPE]);
+    const backup = buildBackup([], [DELETED_RECIPE], EXPORTED_AT);
     expect(backup.recipes).toContainEqual(DELETED_RECIPE);
   });
 });
 
 describe("parseBackup", () => {
   it("acepta una entrada de colección borrada y conserva su deletedAt", () => {
-    const json = JSON.stringify(buildBackup([ACTIVE_ENTRY, DELETED_ENTRY], []));
+    const json = JSON.stringify(buildBackup([ACTIVE_ENTRY, DELETED_ENTRY], [], EXPORTED_AT));
     const parsed = parseBackup(json);
     expect(parsed.collection).toContainEqual(DELETED_ENTRY);
   });
 
   it("acepta una receta propia borrada y conserva su deletedAt", () => {
-    const json = JSON.stringify(buildBackup([], [DELETED_RECIPE]));
+    const json = JSON.stringify(buildBackup([], [DELETED_RECIPE], EXPORTED_AT));
     const parsed = parseBackup(json);
     expect(parsed.recipes).toContainEqual(DELETED_RECIPE);
   });
