@@ -97,6 +97,16 @@ describe("localRecipeRepository", () => {
     expect(loaded).toEqual([{ ...legacy, updatedAt: LEGACY_UPDATED_AT }]);
   });
 
+  it("load no filtra las recetas borradas", async () => {
+    const deleted: RecipeRecord = {
+      ...RECIPE,
+      deletedAt: "2026-01-02T00:00:00.000Z",
+    };
+    await localRecipeRepository.upsert([deleted]);
+
+    expect(await localRecipeRepository.load()).toContainEqual(deleted);
+  });
+
   it("upsert fusiona por id sin eliminar registros existentes", async () => {
     const other: RecipeRecord = { ...RECIPE, id: "orco-verde" };
     await localRecipeRepository.upsert([RECIPE, other]);

@@ -17,6 +17,19 @@ describe("catálogo", () => {
     expect(new Set(codes).size).toBe(codes.length);
   });
 
+  it("tiene 286 referencias, cada una con su Lab calculado y sin códigos repetidos", () => {
+    expect(PAINTS).toHaveLength(286);
+
+    for (const paint of PAINTS) {
+      expect(Number.isFinite(paint.lab.l)).toBe(true);
+      expect(Number.isFinite(paint.lab.a)).toBe(true);
+      expect(Number.isFinite(paint.lab.b)).toBe(true);
+    }
+
+    const codes = PAINTS.map((paint) => paint.code);
+    expect(new Set(codes).size).toBe(286);
+  });
+
   it("tiene un hex válido en cada referencia", () => {
     const invalid = PAINTS.filter((paint) => !/^#[0-9A-F]{6}$/.test(paint.hex));
     expect(invalid).toEqual([]);

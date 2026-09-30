@@ -294,15 +294,43 @@ describe("registros borrados", () => {
     expect(deleted?.deletedAt).toBe(DELETED_AT);
   });
 
+  it("quitar una pintura propia desde el armario la saca de las vistas y queda borrada", async () => {
+    storeCollection([entry("AK11179", "owned")]);
+    go("/coleccion");
+    await render();
+
+    // Por defecto se ve la pestaña "Las que tengo".
+    expect(container.textContent).toContain("1 en el armario");
+    expect(container.textContent).toContain("Ultramarine");
+
+    // Igual que haría el usuario: vuelve a pulsar "La tengo", que ya está
+    // activo, y eso saca la pintura de la colección (control real de la
+    // tarjeta, no una llamada directa a la API).
+    click(buttonWith("La tengo"));
+
+    expect(container.textContent).toContain("0 en el armario");
+    expect(container.textContent).not.toContain("Ultramarine");
+    const [stored] = storedCollection();
+    expect(stored?.code).toBe("AK11179");
+    expect(stored?.deletedAt).toBeDefined();
+  });
+
   it("quitar una pintura la deja en localStorage con deletedAt", async () => {
     storeCollection([entry("AK11191", "wishlist")]);
     go("/coleccion");
     await render();
 
+    // El contador antes de quitar tiene que ser distinto de 0, si no la
+    // aserción final no demuestra nada.
+    expect(container.textContent).toContain("1 por comprar");
+
     click(buttonWith("Lista de compra"));
+    expect(container.textContent).toContain("Gold");
+
     click(buttonWith("Quitar"));
 
     expect(container.textContent).toContain("0 por comprar");
+    expect(container.textContent).not.toContain("Gold");
     const [stored] = storedCollection();
     expect(stored?.code).toBe("AK11191");
     expect(stored?.deletedAt).toBeDefined();
