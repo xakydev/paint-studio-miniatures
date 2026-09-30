@@ -84,6 +84,15 @@ function linkWith(text: string): HTMLAnchorElement {
   return found;
 }
 
+/** Como buttonWith, pero el texto tiene que coincidir entero. */
+function buttonExactly(text: string): HTMLButtonElement {
+  const found = [...container.querySelectorAll("button")].find(
+    (b) => b.textContent?.trim() === text,
+  );
+  if (!found) throw new Error(`No hay botón con el texto exacto "${text}"`);
+  return found;
+}
+
 function buttonWith(text: string): HTMLButtonElement {
   const found = [...container.querySelectorAll("button")].find((b) =>
     b.textContent?.includes(text),
@@ -303,16 +312,94 @@ describe("registros borrados", () => {
     expect(container.textContent).toContain("1 en el armario");
     expect(container.textContent).toContain("Ultramarine");
 
-    // Igual que haría el usuario: vuelve a pulsar "La tengo", que ya está
-    // activo, y eso saca la pintura de la colección (control real de la
-    // tarjeta, no una llamada directa a la API).
-    click(buttonWith("La tengo"));
+    // Con la pintura en el armario, el control muestra el estado y ofrece
+    // "Quitar" como acción aparte: el botón de estado ya no la borra.
+    expect(container.textContent).toContain("En el armario");
+    expect(container.textContent).not.toContain("La tengo");
+    click(buttonExactly("Quitar"));
 
+    // Quitar pide confirmación nombrando la pintura.
+    const dialog = container.querySelector('[role="dialog"]');
+    expect(dialog?.textContent).toContain("¿Quitar Ultramarine (AK11179)?");
+    click(buttonExactly("Quitar de la colección"));
+
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
     expect(container.textContent).toContain("0 en el armario");
     expect(container.textContent).not.toContain("Ultramarine");
     const [stored] = storedCollection();
     expect(stored?.code).toBe("AK11179");
     expect(stored?.deletedAt).toBeDefined();
+  });
+
+  it("al quitar una pintura se puede pasar a la lista de compra en vez de borrarla", async () => {
+    storeCollection([entry("AK11179", "owned")]);
+    go("/coleccion");
+    await render();
+    expect(container.textContent).toContain("1 en el armario");
+    expect(container.textContent).toContain("0 por comprar");
+
+    click(buttonExactly("Quitar"));
+    click(buttonExactly("Pasar a comprar"));
+
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(container.textContent).toContain("0 en el armario");
+    expect(container.textContent).toContain("1 por comprar");
+    const [stored] = storedCollection();
+    expect(stored?.status).toBe("wishlist");
+    expect(stored?.deletedAt).toBeUndefined();
+  });
+
+  it("cancelar la confirmación deja la pintura como estaba", async () => {
+    storeCollection([entry("AK11179", "owned")]);
+    go("/coleccion");
+    await render();
+
+    click(buttonExactly("Quitar"));
+    click(buttonExactly("Cancelar"));
+
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(container.textContent).toContain("1 en el armario");
+    const [stored] = storedCollection();
+    expect(stored?.status).toBe("owned");
+    expect(stored?.deletedAt).toBeUndefined();
+  });
+
+  it("Escape cierra la confirmación sin tocar nada", async () => {
+    storeCollection([entry("AK11179", "owned")]);
+    go("/coleccion");
+    await render();
+
+    click(buttonExactly("Quitar"));
+    // El foco arranca en "Cancelar", así que Escape llega al diálogo.
+    expect(document.activeElement?.textContent).toBe("Cancelar");
+    act(() => {
+      document.activeElement!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
+    });
+
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(container.textContent).toContain("1 en el armario");
+  });
+
+  it("en el catálogo, una pintura por comprar se marca como comprada o se quita sin confirmar", async () => {
+    await render();
+    const search = container.querySelector<HTMLInputElement>('input[type="search"]')!;
+    type(search, "AK11179");
+
+    click(buttonExactly("Comprar"));
+    expect(container.textContent).toContain("Por comprar");
+    expect(container.textContent).toContain("1 por comprar");
+
+    // Quitar de la lista de compra no pierde nada del armario: sin diálogo.
+    click(buttonExactly("Quitar"));
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+    expect(container.textContent).toContain("0 por comprar");
+
+    click(buttonExactly("Comprar"));
+    click(buttonExactly("Ya la he comprado"));
+    expect(container.textContent).toContain("En el armario");
+    expect(container.textContent).toContain("1 en armario");
   });
 
   it("quitar una pintura la deja en localStorage con deletedAt", async () => {
