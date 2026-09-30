@@ -13,5 +13,9 @@ licencia al redistribuir los datos, y este repositorio los redistribuye.
 - `AKRC.md` — gama AK Real Colors
 
 Los valores hex son **aproximaciones digitales** del color real del bote: sirven
-para buscar y comparar, no como prueba colorimétrica. Corrige aquí lo que veas
-desviado y vuelve a ejecutar `npm run build:catalog`.
+para buscar y comparar, no como prueba colorimétrica.
+
+**No edites estos ficheros.** Están vendorizados tal cual para poder
+actualizarlos de golpe desde el repositorio original. Lo que veas desviado se
+corrige en `data/overrides.json`, que el build aplica encima; ver «Editar los
+datos» en el README.

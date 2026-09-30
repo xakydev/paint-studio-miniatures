@@ -1,12 +1,12 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import { Layout } from "./components/Layout";
-import { LibraryProvider } from "./hooks/LibraryProvider";
-import { CatalogPage } from "./routes/CatalogPage";
-import { CollectionPage } from "./routes/CollectionPage";
-import { MatcherPage } from "./routes/MatcherPage";
-import { RecipeDetailPage } from "./routes/RecipeDetailPage";
-import { RecipesPage } from "./routes/RecipesPage";
+import { Layout } from "./ui/components/Layout";
+import { LibraryProvider } from "./ui/hooks/LibraryProvider";
+import { CatalogPage } from "./ui/routes/CatalogPage";
+import { CollectionPage } from "./ui/routes/CollectionPage";
+import { MatcherPage } from "./ui/routes/MatcherPage";
+import { RecipeDetailPage } from "./ui/routes/RecipeDetailPage";
+import { RecipesPage } from "./ui/routes/RecipesPage";
 
 export function App() {
   return (

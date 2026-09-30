@@ -1,0 +1,14 @@
+{
+  "fix": {
+    "AK11001": {
+      "family": "standard",
+      "why": "La fuente lo marca como Intense, pero es el blanco base de la gama Standard: los Intense de verdad llevan 'Deep' o 'Intense' en el nombre."
+    },
+    "AK11029": {
+      "family": "standard",
+      "why": "Mismo caso que AK11001: negro base de Standard etiquetado como Intense en la fuente."
+    }
+  },
+  "add": {},
+  "drop": {}
+}

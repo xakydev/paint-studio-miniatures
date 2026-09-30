@@ -31,49 +31,50 @@ afterEach(() => {
   container.remove();
 });
 
-function render() {
-  act(() => {
+/** Async: el `act` asíncrono vacía la microtarea del `load` de los repositorios. */
+async function render() {
+  await act(async () => {
     root.render(<App />);
   });
 }
 
 describe("App", () => {
-  it("monta el catálogo en la ruta raíz", () => {
-    render();
+  it("monta el catálogo en la ruta raíz", async () => {
+    await render();
     expect(container.textContent).toContain("Catálogo AK Interactive");
-    expect(container.textContent).toContain("1130 referencias");
+    expect(container.textContent).toContain("286 referencias");
   });
 
-  it("monta la lista de recetas", () => {
+  it("monta la lista de recetas", async () => {
     navigate("/recetas");
-    render();
+    await render();
     expect(container.textContent).toContain("Marine espacial azul");
   });
 
-  it("monta el detalle de una receta con sus zonas", () => {
+  it("monta el detalle de una receta con sus zonas", async () => {
     navigate("/recetas/space-marine-azul");
-    render();
+    await render();
     expect(container.textContent).toContain("Armadura");
     expect(container.textContent).toContain("Ultramarine");
     expect(container.textContent).toContain("Te faltan");
   });
 
-  it("monta el buscador por color con su mejor coincidencia", () => {
+  it("monta el buscador por color con su mejor coincidencia", async () => {
     navigate("/matcher");
-    render();
+    await render();
     expect(container.textContent).toContain("Buscar pintura por color");
     // El color inicial es exactamente el hex de AK11434 Red Brown.
     expect(container.textContent).toContain("AK11434");
   });
 
-  it("monta la colección vacía con su mensaje de ayuda", () => {
+  it("monta la colección vacía con su mensaje de ayuda", async () => {
     navigate("/coleccion");
-    render();
+    await render();
     expect(container.textContent).toContain("0 en el armario");
     expect(container.textContent).toContain("Todavía no has marcado ninguna");
   });
 
-  it("recupera de localStorage lo que ya estaba guardado", () => {
+  it("recupera de localStorage lo que ya estaba guardado", async () => {
     localStorage.setItem(
       "paint-studio-miniatures:collection:v1",
       JSON.stringify([
@@ -87,7 +88,7 @@ describe("App", () => {
     );
 
     navigate("/coleccion");
-    render();
+    await render();
     expect(container.textContent).toContain("1 en el armario");
     expect(container.textContent).toContain("Ultramarine");
   });
