@@ -4,12 +4,13 @@ import type { BackupFile } from "../../domain/backup";
 import type { CollectionEntry, Ownership, Recipe } from "../../domain/types";
 
 /**
- * Fase de la carga inicial. `IDLE` es el primer render, antes de que corra el
- * efecto; `LOADING`, mientras resuelven los repositorios. Hasta `READY` no se
- * pinta nada que dependa de los datos ni se escribe nada.
+ * Fase de la carga inicial. Arranca directamente en `LOADING`: no hay un
+ * `IDLE` previo porque el efecto de carga corre antes del primer pintado que
+ * pueda depender de los datos. `LOADING` dura mientras resuelven los
+ * repositorios; hasta `READY` no se pinta nada que dependa de los datos ni se
+ * escribe nada.
  */
 export const LOAD_STATUS = {
-  IDLE: "idle",
   LOADING: "loading",
   READY: "ready",
 } as const;
