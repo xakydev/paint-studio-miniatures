@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DIFFICULTY, OWNERSHIP } from "../../domain/types";
 import type { CollectionEntry } from "../../domain/types";
@@ -153,5 +153,37 @@ describe("upsert nunca destruye lo que no entiende", () => {
     expect(rescue).toHaveLength(1);
     expect(localStorage.getItem(rescue[0]!)).toBe("{esto no es json");
     expect(await localCollectionRepository.load()).toEqual([OWNED]);
+  });
+
+  describe("cuando getItem lanza al intentar leer antes de escribir", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("upsert no escribe: pisaría lo guardado sin haberlo podido leer", async () => {
+      localStorage.setItem(COLLECTION_KEY, JSON.stringify([OWNED]));
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("SecurityError simulado");
+      });
+      const setItemSpy = vi.spyOn(Storage.prototype, "setItem");
+
+      await expect(localCollectionRepository.upsert([WISHLISTED])).rejects.toThrow(
+        /no se pudo leer/i,
+      );
+
+      expect(setItemSpy).not.toHaveBeenCalled();
+
+      vi.restoreAllMocks();
+      expect(JSON.parse(localStorage.getItem(COLLECTION_KEY)!)).toEqual([OWNED]);
+    });
+
+    it("load sigue devolviendo vacío cuando no se puede leer", async () => {
+      localStorage.setItem(COLLECTION_KEY, JSON.stringify([OWNED]));
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw new Error("SecurityError simulado");
+      });
+
+      expect(await localCollectionRepository.load()).toEqual([]);
+    });
   });
 });

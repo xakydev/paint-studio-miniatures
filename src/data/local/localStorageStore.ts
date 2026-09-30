@@ -37,6 +37,13 @@ export function localStorageStore<T>(options: LocalStoreOptions<T>) {
       // que el guard no entiende (datos de otra versión, un campo nuevo) no se
       // muestra, pero reescribir la clave no puede borrarlo. Nada se pierde.
       const stored = readArray(key);
+      if (stored.unreadable) {
+        // No se pudo leer lo que había: escribir ahora lo pisaría sin haberlo
+        // leído primero, y eso sí podría perder datos. Mejor no escribir.
+        throw new Error(
+          `No se pudo leer "${key}" de localStorage antes de guardar: no se escriben los cambios para no perder lo que ya hubiera.`,
+        );
+      }
       if (stored.corrupt !== undefined) {
         // Ilegible no es lo mismo que irrecuperable: se aparta a mano antes de
         // escribir encima, para poder rescatarlo desde las DevTools.
