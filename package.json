@@ -9,9 +9,14 @@
     "build:catalog": "node scripts/build-catalog.ts",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local > src/data/supabase/database.types.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4"
@@ -25,6 +30,7 @@
     "jsdom": "^30.1.1",
     "oxc-transform-react": "^0.145.0",
     "oxlint": "^1.81.0",
+    "supabase": "2.119.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",

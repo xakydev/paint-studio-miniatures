@@ -25,3 +25,8 @@ dist-ssr
 
 # artefactos de trabajo de xakydev-teams
 .sdd/
+
+# Variables de entorno: nunca se versionan. Solo .env.example, que no lleva valores.
+.env
+.env.*
+!.env.example
