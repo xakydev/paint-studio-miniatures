@@ -6,7 +6,7 @@
 -- PostgREST con cada petición (guía de testing de Supabase).
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(27);
 
 -- Preparación como dueño de las tablas (postgres): se salta la RLS, así que puede sembrar las
 -- filas de los dos usuarios.
@@ -149,10 +149,19 @@ select results_eq(
 );
 
 -- on delete restrict: borrar un usuario con datos falla; borrar una cuenta es un proceso manual.
--- RESTRICT da 23001 (restrict_violation), no el 23503 de NO ACTION.
+-- Postgres 17 (el de Supabase) da 23503 (foreign_key_violation) tanto con RESTRICT como con
+-- NO ACTION; PGlite daba 23001. Como el código no distingue las dos, la acción de la FK se
+-- comprueba aparte en el catálogo: con NO ACTION, un trigger diferido podría colarse.
+select ok(
+  (select bool_and(confdeltype = 'r') and count(*) = 2
+     from pg_constraint
+    where contype = 'f' and confrelid = 'auth.users'::regclass
+      and conrelid in ('public.collection_entries'::regclass, 'public.recipes'::regclass)),
+  'las FK de collection_entries y recipes hacia auth.users son ON DELETE RESTRICT'
+);
 select throws_ok(
   $$delete from auth.users where id = '11111111-1111-1111-1111-111111111111'$$,
-  '23001', null,
+  '23503', null,
   'borrar de auth.users a un usuario con filas propias falla'
 );
 select ok(

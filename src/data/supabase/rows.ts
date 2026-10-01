@@ -82,8 +82,10 @@ export function toRecipeRow(recipe: RecipeRecord): RecipeRowInsert {
     id: recipe.id,
     // Una receta solo contiene textos, números y arrays de objetos así: es
     // JSON por construcción. TypeScript no puede deducirlo porque las
-    // interfaces del dominio no tienen firma de índice.
-    data: data as Json,
+    // interfaces del dominio no tienen firma de índice. Se tipa como objeto
+    // JSON, no como `Json`: la columna es `not null` y el tipo generado
+    // excluye el `null` (`NonNullable<Json>`); un objeto nunca lo es.
+    data: data as { [key: string]: Json | undefined },
     updated_at: recipe.updatedAt,
     deleted_at: recipe.deletedAt ?? null,
   };
