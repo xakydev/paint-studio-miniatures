@@ -14,8 +14,8 @@
           {
             "patterns": [
               {
-                "group": ["**/data", "**/data/**", "**/ui", "**/ui/**"],
-                "message": "Regla de capas: domain no puede importar de data ni de ui. domain solo contiene tipos y lógica pura; data y ui dependen de domain, nunca al revés."
+                "group": ["**/data", "**/data/**", "**/ui", "**/ui/**", "@supabase/supabase-js"],
+                "message": "Regla de capas: domain no puede importar de data, de ui, ni del SDK de Supabase. domain solo contiene tipos y lógica pura; data y ui dependen de domain, nunca al revés, y el SDK solo lo conoce el adaptador en data/supabase."
               }
             ]
           }
@@ -24,6 +24,7 @@
     },
     {
       "files": ["src/data/**"],
+      "excludeFiles": ["src/data/supabase/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -32,6 +33,62 @@
               {
                 "group": ["**/ui", "**/ui/**"],
                 "message": "Regla de capas: data no puede importar de ui. data implementa puertos que domain y ui consumen; ui depende de data, nunca al revés."
+              },
+              {
+                "group": ["@supabase/supabase-js"],
+                "message": "Regla de capas: el SDK de Supabase solo se importa dentro de data/supabase, el adaptador. El resto de data depende de los puertos, no del SDK."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/data/supabase/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/ui", "**/ui/**"],
+                "message": "Regla de capas: data no puede importar de ui. data implementa puertos que domain y ui consumen; ui depende de data, nunca al revés."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/ui/**", "src/App.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@supabase/supabase-js"],
+                "message": "Regla de capas: el SDK de Supabase solo se importa dentro de data/supabase, el adaptador. ui solo conoce los puertos."
+              },
+              {
+                "group": ["**/data/supabase", "**/data/supabase/**"],
+                "message": "Regla de capas: ui solo conoce los puertos (data/ports), nunca el adaptador de Supabase. La raíz de composición es main.tsx."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/main.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@supabase/supabase-js"],
+                "message": "Regla de capas: ni siquiera la raíz de composición importa el SDK directamente; usa el adaptador en data/supabase (createSupabaseBackend)."
               }
             ]
           }
