@@ -1,6 +1,9 @@
+import type { ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 
 import { useLibrary } from "../hooks/libraryContext";
+import { SaveErrorBanner } from "./SaveErrorBanner";
+import { SessionMenu } from "./SessionMenu";
 
 const LINKS = [
   { to: "/", label: "Catálogo", end: true },
@@ -9,7 +12,12 @@ const LINKS = [
   { to: "/coleccion", label: "Mi colección", end: false },
 ] as const;
 
-export function Layout() {
+export interface LayoutProps {
+  /** Un aviso informativo encima de la página, como el de entradas no subidas. */
+  notice?: ReactNode;
+}
+
+export function Layout({ notice = null }: LayoutProps) {
   const { ownedCodes, wishlistCodes } = useLibrary();
 
   return (
@@ -42,10 +50,14 @@ export function Layout() {
           <p className="font-mono text-xs text-neutral-500">
             {ownedCodes.size} en armario · {wishlistCodes.size} por comprar
           </p>
+
+          <SessionMenu />
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
+        <SaveErrorBanner />
+        {notice}
         <Outlet />
       </main>
     </div>

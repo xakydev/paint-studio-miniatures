@@ -21,6 +21,11 @@ export interface InMemoryRepository<T> {
   /** Simula un cambio remoto notificando a quien esté suscrito. */
   emit(records: readonly T[]): void;
   /**
+   * Hace que los siguientes `upsert` rechacen con este error (siguen
+   * quedando registrados en `upserts`); `null` vuelve a aceptarlos.
+   */
+  failUpserts(error: Error | null): void;
+  /**
    * Cada lote recibido por `upsert`, en orden. Es lo que permite comprobar
    * que no se escribe nada antes de terminar la carga, o qué se escribió.
    */
@@ -41,6 +46,7 @@ function createInMemoryRepository<T>(): InMemoryRepository<T> {
   const listeners = new Set<(changed: readonly T[]) => void>();
   const upserts: (readonly T[])[] = [];
   let loadCount = 0;
+  let upsertError: Error | null = null;
 
   return {
     load: () => {
@@ -52,6 +58,7 @@ function createInMemoryRepository<T>(): InMemoryRepository<T> {
     // comprobarla.
     upsert: async (records) => {
       upserts.push([...records]);
+      if (upsertError) throw upsertError;
     },
     subscribe: (listener) => {
       listeners.add(listener);
@@ -63,6 +70,9 @@ function createInMemoryRepository<T>(): InMemoryRepository<T> {
     rejectLoad: (error) => rejectLoad?.(error),
     emit: (records) => {
       for (const listener of listeners) listener(records);
+    },
+    failUpserts: (error) => {
+      upsertError = error;
     },
     upserts,
     get loadCount() {

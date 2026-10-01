@@ -17,6 +17,11 @@ export const LOAD_STATUS = {
 
 export type LoadStatus = (typeof LOAD_STATUS)[keyof typeof LOAD_STATUS];
 
+/** Textos del aviso de error, compartidos por el Provider y sus tests. */
+export const SAVE_ERROR_MESSAGE =
+  "No se ha podido guardar el último cambio. Lo ves en pantalla, pero no está guardado: recarga para ver lo que hay guardado.";
+export const LOAD_ERROR_MESSAGE = "No se pudieron cargar tus datos";
+
 /**
  * Lo que ven las vistas. Todo lo que lista o cuenta registros ya viene sin
  * los borrados: el filtrado se hace una sola vez, en el Provider.
@@ -49,6 +54,14 @@ export interface LibraryApi {
   customRecipes: Recipe[];
   saveRecipe: (recipe: Recipe) => void;
   deleteRecipe: (id: string) => void;
+
+  /**
+   * Aviso del último guardado o carga que falló; `null` si no hay. No hay
+   * rollback: el cambio sigue en pantalla aunque no esté guardado.
+   */
+  saveError: string | null;
+  /** Retira el aviso sin deshacer nada. */
+  dismissSaveError: () => void;
 }
 
 export const LibraryContext = createContext<LibraryApi | null>(null);

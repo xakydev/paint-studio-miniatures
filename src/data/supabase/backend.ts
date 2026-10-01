@@ -2,15 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { Backend, RepositoryPair } from "../ports/Backend";
 import { createSupabaseAuthGateway } from "./auth";
+import { readSupabaseSettings, URL_VARIABLE } from "./settings";
 import type { Database } from "./database.types";
 import {
   createSupabaseCollectionRepository,
   createSupabaseRecipeRepository,
 } from "./SupabaseRepository";
-
-/** Las dos son públicas por diseño (viajan en el bundle): la seguridad la da la RLS. */
-const URL_VARIABLE = "VITE_SUPABASE_URL";
-const KEY_VARIABLE = "VITE_SUPABASE_PUBLISHABLE_KEY";
 
 /**
  * `fetch` no tiene tiempo límite: con la red colgada, un guardado no acabaría
@@ -19,13 +16,6 @@ const KEY_VARIABLE = "VITE_SUPABASE_PUBLISHABLE_KEY";
  */
 const REQUEST_TIMEOUT_MS = 15_000;
 
-function readSetting(env: Readonly<Record<string, unknown>>, name: string): string | null {
-  const value = env[name];
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed === "" ? null : trimmed;
-}
-
 /**
  * Construye el backend desde las variables de entorno. `main.tsx` le pasa
  * `import.meta.env` y monta `<App backend={…} />`: así ni App ni sus tests
@@ -33,9 +23,9 @@ function readSetting(env: Readonly<Record<string, unknown>>, name: string): stri
  * y la app funciona como hasta ahora, en local y sin login.
  */
 export function createSupabaseBackend(env: Readonly<Record<string, unknown>>): Backend | null {
-  const url = readSetting(env, URL_VARIABLE);
-  const key = readSetting(env, KEY_VARIABLE);
-  if (url === null || key === null) return null;
+  const settings = readSupabaseSettings(env);
+  if (settings === null) return null;
+  const { url, key } = settings;
 
   let client: ReturnType<typeof createClient<Database>>;
   try {
