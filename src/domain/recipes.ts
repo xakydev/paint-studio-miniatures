@@ -1,6 +1,16 @@
 import { activeOnly } from "./tombstone";
 import type { Recipe } from "./types";
 
+// Límites que reflejan los CHECK de `recipes` en
+// supabase/migrations/20261001061555_esquema_inicial.sql.
+const RECIPE_ID_MIN_LENGTH = 1;
+const RECIPE_ID_MAX_LENGTH = 200;
+
+/** Postgres valida el formato con `timestamptz`; aquí, que `Date.parse` no dé NaN. */
+function isParsableDate(value: string): boolean {
+  return !Number.isNaN(Date.parse(value));
+}
+
 /**
  * `updatedAt` sintética para recetas propias guardadas por una versión
  * anterior, que no tenía ese campo. Es la fecha más antigua posible, así que
@@ -39,4 +49,23 @@ export function mergeRecipes(
     ...active,
     ...seedRecipes.filter((seed) => !activeIds.has(seed.id)),
   ];
+}
+
+/**
+ * Espejo de los CHECK de `recipes` en
+ * supabase/migrations/20261001061555_esquema_inicial.sql: si cambia uno de
+ * los dos, cambia el otro. La columna `data` guarda el resto de los campos
+ * (todo menos `id`, `updatedAt` y `deletedAt`); como siempre es un objeto en
+ * JS, lo único que el CHECK puede rechazar de verdad es que `zones` no sea un
+ * array — el `coalesce` de la migración existe justo para que una receta sin
+ * `zones` (que daría NULL) no cuele.
+ */
+export function isRecipeWithinDomainLimits(recipe: RecipeRecord): boolean {
+  return (
+    recipe.id.length >= RECIPE_ID_MIN_LENGTH &&
+    recipe.id.length <= RECIPE_ID_MAX_LENGTH &&
+    Array.isArray(recipe.zones) &&
+    isParsableDate(recipe.updatedAt) &&
+    (recipe.deletedAt === undefined || isParsableDate(recipe.deletedAt))
+  );
 }

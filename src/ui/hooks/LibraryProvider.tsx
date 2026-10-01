@@ -8,7 +8,7 @@ import type { CollectionRepository } from "../../data/ports/CollectionRepository
 import type { RecipeRepository } from "../../data/ports/RecipeRepository";
 import { RECIPES } from "../../data/static/catalogSource";
 import { buildBackup } from "../../domain/backup";
-import { markStatus, removeEntry, upsertByKey } from "../../domain/collection";
+import { markStatus, removeEntry, restoreCollection, upsertByKey } from "../../domain/collection";
 import { mergeRecipes, type RecipeRecord } from "../../domain/recipes";
 import { activeOnly } from "../../domain/tombstone";
 import { OWNERSHIP, type CollectionEntry, type Recipe } from "../../domain/types";
@@ -190,14 +190,7 @@ export function LibraryProvider({
     replaceCollection: (imported) => {
       // Restaurar, no sustituir: lo que no viene en el fichero se marca como
       // borrado, porque escribir solo lo importado no quitaría nada.
-      const timestamp = now();
-      const importedCodes = new Set(imported.map(entryKey));
-      commitEntries([
-        ...imported,
-        ...activeEntries
-          .filter((entry) => !importedCodes.has(entry.code))
-          .map((entry) => removeEntry(entry, timestamp)),
-      ]);
+      commitEntries(restoreCollection(entries, imported, now()));
     },
     clearCollection: () => {
       const timestamp = now();

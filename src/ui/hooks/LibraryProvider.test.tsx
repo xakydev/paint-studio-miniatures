@@ -343,7 +343,11 @@ describe("LibraryProvider: acciones", () => {
       currentApi().replaceCollection([imported]);
     });
 
-    expect(currentApi().entries).toEqual([imported]);
+    // El updatedAt importado se sella con la hora de la importación, no con
+    // el que traía el fichero: así gana en una resolución LWW.
+    const [result] = currentApi().entries;
+    expect(result).toMatchObject({ code: "AK11191", status: OWNERSHIP.OWNED, level: 2 });
+    expect(result?.updatedAt).not.toBe("2026-02-01T00:00:00.000Z");
     const written = collection.upserts[0] ?? [];
     expect(written.map((e) => e.code).sort()).toEqual(["AK11179", "AK11191"]);
     expect(written.find((e) => e.code === "AK11179")?.deletedAt).toBeDefined();
