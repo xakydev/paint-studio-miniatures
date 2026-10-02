@@ -94,6 +94,27 @@
           }
         ]
       }
+    },
+    {
+      "files": ["src/*.ts", "src/*.tsx"],
+      "excludeFiles": ["src/App.tsx", "src/main.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@supabase/supabase-js"],
+                "message": "Regla de capas: el SDK de Supabase solo se importa dentro de data/supabase, el adaptador. Ningún otro fichero suelto de la raíz de src/ lo necesita."
+              },
+              {
+                "group": ["**/data/supabase", "**/data/supabase/**"],
+                "message": "Regla de capas: solo main.tsx (la raíz de composición) conoce el adaptador de Supabase. El resto depende de los puertos."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
