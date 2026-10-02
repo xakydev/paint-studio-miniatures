@@ -8,13 +8,15 @@ import type { CollectionRepository } from "../../data/ports/CollectionRepository
 import type { RecipeRepository } from "../../data/ports/RecipeRepository";
 import { RECIPES } from "../../data/static/catalogSource";
 import { buildBackup } from "../../domain/backup";
-import { markStatus, removeEntry, upsertByKey } from "../../domain/collection";
+import { markStatus, removeEntry, restoreCollection, upsertByKey } from "../../domain/collection";
 import { mergeRecipes, type RecipeRecord } from "../../domain/recipes";
 import { activeOnly } from "../../domain/tombstone";
 import { OWNERSHIP, type CollectionEntry, type Recipe } from "../../domain/types";
 import {
+  LOAD_ERROR_MESSAGE,
   LOAD_STATUS,
   LibraryContext,
+  SAVE_ERROR_MESSAGE,
   type LibraryApi,
   type LoadStatus,
 } from "./libraryContext";
@@ -62,6 +64,7 @@ export function LibraryProvider({
   // del primer render, y fijar el estado dentro de él provocaría un render
   // en cascada sin ninguna diferencia visible.
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LOAD_STATUS.LOADING);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [source, setSource] = useState<RepositorySource>({
     collectionRepository,
     recipeRepository,
@@ -79,6 +82,8 @@ export function LibraryProvider({
     setEntries([]);
     setRecipeRecords([]);
     setLoadStatus(LOAD_STATUS.LOADING);
+    // El aviso hablaba del origen anterior: con el nuevo no tiene sentido.
+    setSaveError(null);
   }
 
   useEffect(() => {
@@ -105,11 +110,13 @@ export function LibraryProvider({
           setEntries((current) => upsertByKey(loadedEntries.value, current, entryKey));
         } else {
           console.error("No se pudo cargar la colección.", loadedEntries.reason);
+          setSaveError(LOAD_ERROR_MESSAGE);
         }
         if (loadedRecipes.status === "fulfilled") {
           setRecipeRecords((current) => upsertByKey(loadedRecipes.value, current, recipeKey));
         } else {
           console.error("No se pudieron cargar las recetas.", loadedRecipes.reason);
+          setSaveError(LOAD_ERROR_MESSAGE);
         }
         setLoadStatus(LOAD_STATUS.READY);
       },
@@ -126,16 +133,23 @@ export function LibraryProvider({
   // las funciones puras de domain: el updater solo funde (StrictMode lo
   // ejecuta dos veces) y la escritura va después, fuera de él. Antes de
   // READY no se escribe nada, para no pisar lo guardado con un estado vacío.
+  // Si la escritura falla no hay rollback: el cambio sigue en pantalla y el
+  // aviso dice que no está guardado. El reintento llega con el sync.
+  const reportSaveError = (error: unknown) => {
+    console.error("No se pudo guardar el último cambio.", error);
+    setSaveError(SAVE_ERROR_MESSAGE);
+  };
+
   const commitEntries = (changed: CollectionEntry[]) => {
     if (loadStatus !== LOAD_STATUS.READY || changed.length === 0) return;
     setEntries((current) => upsertByKey(current, changed, entryKey));
-    void collectionRepository.upsert(changed).catch(console.error);
+    void collectionRepository.upsert(changed).catch(reportSaveError);
   };
 
   const commitRecipes = (changed: RecipeRecord[]) => {
     if (loadStatus !== LOAD_STATUS.READY || changed.length === 0) return;
     setRecipeRecords((current) => upsertByKey(current, changed, recipeKey));
-    void recipeRepository.upsert(changed).catch(console.error);
+    void recipeRepository.upsert(changed).catch(reportSaveError);
   };
 
   const now = () => new Date().toISOString();
@@ -190,14 +204,7 @@ export function LibraryProvider({
     replaceCollection: (imported) => {
       // Restaurar, no sustituir: lo que no viene en el fichero se marca como
       // borrado, porque escribir solo lo importado no quitaría nada.
-      const timestamp = now();
-      const importedCodes = new Set(imported.map(entryKey));
-      commitEntries([
-        ...imported,
-        ...activeEntries
-          .filter((entry) => !importedCodes.has(entry.code))
-          .map((entry) => removeEntry(entry, timestamp)),
-      ]);
+      commitEntries(restoreCollection(entries, imported, now()));
     },
     clearCollection: () => {
       const timestamp = now();
@@ -218,6 +225,9 @@ export function LibraryProvider({
       const timestamp = now();
       commitRecipes([{ ...record, deletedAt: timestamp, updatedAt: timestamp }]);
     },
+
+    saveError,
+    dismissSaveError: () => setSaveError(null),
   };
 
   // Los consumidores nunca ven un estado a medias: hasta READY no se pintan.

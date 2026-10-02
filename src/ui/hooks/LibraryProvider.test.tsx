@@ -188,6 +188,8 @@ describe("LibraryProvider: carga inicial", () => {
 
     expect(container.querySelector('[role="status"]')).toBeNull();
     expect(currentApi().entries).toEqual([]);
+    // El fallo de carga usa el mismo canal que el de guardado, con su texto.
+    expect(currentApi().saveError).toBe("No se pudieron cargar tus datos");
     expect(error).toHaveBeenCalled();
     error.mockRestore();
   });
@@ -343,7 +345,11 @@ describe("LibraryProvider: acciones", () => {
       currentApi().replaceCollection([imported]);
     });
 
-    expect(currentApi().entries).toEqual([imported]);
+    // El updatedAt importado se sella con la hora de la importación, no con
+    // el que traía el fichero: así gana en una resolución LWW.
+    const [result] = currentApi().entries;
+    expect(result).toMatchObject({ code: "AK11191", status: OWNERSHIP.OWNED, level: 2 });
+    expect(result?.updatedAt).not.toBe("2026-02-01T00:00:00.000Z");
     const written = collection.upserts[0] ?? [];
     expect(written.map((e) => e.code).sort()).toEqual(["AK11179", "AK11191"]);
     expect(written.find((e) => e.code === "AK11179")?.deletedAt).toBeDefined();
@@ -368,5 +374,94 @@ describe("LibraryProvider: acciones", () => {
       "Marine espacial azul",
     );
     expect(recipes.upserts[1]?.[0]?.deletedAt).toBeDefined();
+  });
+});
+
+describe("LibraryProvider: error de guardado", () => {
+  const SAVE_ERROR =
+    "No se ha podido guardar el último cambio. Lo ves en pantalla, pero no está guardado: recarga para ver lo que hay guardado.";
+
+  it("sin fallos no hay aviso", async () => {
+    await mount();
+    await resolveLoads([OWNED]);
+    await act(async () => {
+      currentApi().setStatus("AK11181", OWNERSHIP.OWNED);
+    });
+    expect(currentApi().saveError).toBeNull();
+  });
+
+  it("un upsert de la colección que falla deja el aviso y no revierte el cambio", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await mount();
+    await resolveLoads();
+    collection.failUpserts(new Error("sin red"));
+
+    await act(async () => {
+      currentApi().setStatus("AK11179", OWNERSHIP.OWNED);
+    });
+
+    expect(currentApi().saveError).toBe(SAVE_ERROR);
+    expect(currentApi().ownedCodes.has("AK11179")).toBe(true);
+    expect(error).toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("un upsert de recetas que falla también deja el aviso", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await mount();
+    await resolveLoads();
+    recipes.failUpserts(new Error("sin red"));
+
+    const { updatedAt: _updatedAt, deletedAt: _deletedAt, ...recipe } = DELETED_OVERRIDE;
+    await act(async () => {
+      currentApi().saveRecipe(recipe);
+    });
+
+    expect(currentApi().saveError).toBe(SAVE_ERROR);
+    expect(currentApi().customRecipes.map((r) => r.id)).toEqual([recipe.id]);
+    error.mockRestore();
+  });
+
+  it("cerrar el aviso lo retira sin deshacer el cambio", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await mount();
+    await resolveLoads();
+    collection.failUpserts(new Error("sin red"));
+    await act(async () => {
+      currentApi().setStatus("AK11179", OWNERSHIP.OWNED);
+    });
+    expect(currentApi().saveError).toBe(SAVE_ERROR);
+
+    act(() => currentApi().dismissSaveError());
+
+    expect(currentApi().saveError).toBeNull();
+    expect(currentApi().ownedCodes.has("AK11179")).toBe(true);
+    // Cerrar el aviso no escribe nada: ni deshace ni reintenta.
+    expect(collection.upserts).toHaveLength(1);
+    error.mockRestore();
+  });
+
+  it("si cambian los repositorios, el aviso del origen anterior desaparece", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await mount();
+    await resolveLoads();
+    collection.failUpserts(new Error("sin red"));
+    await act(async () => {
+      currentApi().setStatus("AK11179", OWNERSHIP.OWNED);
+    });
+    expect(currentApi().saveError).toBe(SAVE_ERROR);
+
+    const nextCollection = createInMemoryCollectionRepository();
+    const nextRecipes = createInMemoryRecipeRepository();
+    await act(async () => {
+      root.render(tree(nextCollection, nextRecipes));
+    });
+    await act(async () => {
+      nextCollection.resolveLoad([]);
+      nextRecipes.resolveLoad([]);
+    });
+
+    expect(currentApi().saveError).toBeNull();
+    error.mockRestore();
   });
 });
