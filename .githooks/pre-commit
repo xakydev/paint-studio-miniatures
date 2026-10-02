@@ -1,0 +1,29 @@
+#!/bin/sh
+# Red de seguridad nº 1 contra la fuga de fotos de AK Interactive.
+#
+# Las fotos de producto tienen copyright de AK y su aviso legal prohíbe
+# reproducirlas o distribuirlas. En este proyecto se descargan solo para uso
+# personal y local (en local-assets/, ignorada por git), así que nunca pueden
+# entrar en un commit: este hook lo impide ANTES de que lleguen al historial.
+#
+# Se activa solo con `npm install` (script "prepare" → core.hooksPath).
+# Las otras dos redes son el test scripts/trackedAssets.test.ts y la
+# comprobación de dist/ en `npm run build`.
+
+# -z: nombres separados por NUL, para no romperse con espacios.
+# --diff-filter=d: lo que se borra no se está añadiendo, no cuenta.
+leaks=$(git diff --cached --name-only --diff-filter=d -z |
+  tr '\0' '\n' |
+  grep -E '^local-assets/|(^|/)AK[0-9]+[^/]*\.(webp|jpe?g|png|avif|gif)$')
+
+if [ -n "$leaks" ]; then
+  echo "pre-commit: commit rechazado." >&2
+  echo "" >&2
+  echo "Estos ficheros parecen fotos de producto de AK Interactive:" >&2
+  echo "$leaks" | sed 's/^/  /' >&2
+  echo "" >&2
+  echo "Tienen copyright de AK y son de uso estrictamente personal y local:" >&2
+  echo "no pueden versionarse. Sácalos del índice con:" >&2
+  echo "  git restore --staged <fichero>" >&2
+  exit 1
+fi
