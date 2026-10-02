@@ -122,8 +122,12 @@ select throws_ok(
   '42501', 'change_log es de solo inserción',
   'el dueño de las tablas no puede modificar la auditoría'
 );
+-- Filtrado por los dos usuarios que siembra este test: sin filtro, un count(*) contaría también
+-- cualquier fila ajena ya presente en la tabla y el test dejaría de ser reproducible fuera de una
+-- base recién reseteada.
 select is(
-  (select count(*) from public.change_log),
+  (select count(*) from public.change_log
+    where user_id in ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222')),
   4::bigint,
   'la auditoría tiene exactamente las cuatro filas generadas por los triggers'
 );

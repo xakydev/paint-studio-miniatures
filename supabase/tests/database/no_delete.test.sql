@@ -79,12 +79,18 @@ select throws_ok($$truncate public.change_log$$, '42501',
   'Borrado físico prohibido en change_log: usa deleted_at',
   'el dueño de las tablas no puede vaciar la auditoría');
 
-select is((select count(*) from public.collection_entries), 1::bigint,
-  'la fila de la colección sigue presente');
-select is((select count(*) from public.recipes), 1::bigint,
-  'la receta sigue presente');
-select is((select count(*) from public.change_log), 1::bigint,
-  'la fila de auditoría sigue presente');
+-- Filtrado por el usuario que siembra este test: con datos ajenos ya en la tabla (otro usuario,
+-- otra sesión), un count(*) sin filtro contaría también esas filas y el test dejaría de ser
+-- reproducible fuera de una base recién reseteada.
+select is(
+  (select count(*) from public.collection_entries where user_id = '11111111-1111-1111-1111-111111111111'),
+  1::bigint, 'la fila de la colección sigue presente');
+select is(
+  (select count(*) from public.recipes where user_id = '11111111-1111-1111-1111-111111111111'),
+  1::bigint, 'la receta sigue presente');
+select is(
+  (select count(*) from public.change_log where user_id = '11111111-1111-1111-1111-111111111111'),
+  1::bigint, 'la fila de auditoría sigue presente');
 
 -- El camino legítimo: el borrado lógico es un UPDATE más nuevo que pone deleted_at.
 set local role authenticated;
