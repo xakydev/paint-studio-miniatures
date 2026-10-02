@@ -6,18 +6,25 @@
     "types": ["node"],
     "skipLibCheck": true,
 
-    /* Bundler mode */
-    "module": "nodenext",
+    /* Bundler mode: igual que tsconfig.app.json. Con "nodenext" tsc exige extensión
+       explícita en todo import relativo del grafo de tipos, incluido src/domain, que
+       build-catalog.ts importa sin extensión (estilo Vite). node ya sabe resolver el
+       .ts de los propios scripts por el import.meta.url; esto es solo para tipar. */
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
 
     /* Linting */
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  // Los scripts corren con `node` (sin ts-node): noEmit + tipos de node + erasableSyntaxOnly
+  // bastan para comprobarlos sin que tsc intente emitir nada que node no vaya a usar.
+  "include": ["vite.config.ts", "scripts/*.ts"]
 }

@@ -96,8 +96,13 @@ function readVendored(): Map<string, PaintRecord> {
 
 // --- Capa de correcciones --------------------------------------------------
 
-/** Campos corregibles de una referencia que ya existe en la fuente. */
+/**
+ * Campos corregibles de una referencia que ya existe en la fuente. El índice
+ * de `string` deja que el type guard de abajo narrows desde `Record<string,
+ * unknown>`, que es lo que sale de parsear el JSON.
+ */
 interface OverrideFix {
+  [key: string]: unknown;
   name?: string;
   family?: PaintFamily;
   hex?: string;
@@ -106,6 +111,7 @@ interface OverrideFix {
 
 /** Referencia que la fuente no trae y añadimos a mano. */
 interface OverrideAdd {
+  [key: string]: unknown;
   name: string;
   family: PaintFamily;
   hex: string;
@@ -113,6 +119,7 @@ interface OverrideAdd {
 }
 
 interface OverrideDrop {
+  [key: string]: unknown;
   why: string;
 }
 
@@ -135,17 +142,44 @@ function isFamily(value: unknown): value is PaintFamily {
   return PAINT_FAMILY_ORDER.includes(value as PaintFamily);
 }
 
+/** Narrows a un `OverrideFix` concreto: `name`, `hex` y `family`, si están, con el tipo correcto. */
+function isOverrideFix(entry: Record<string, unknown>): entry is OverrideFix {
+  return (
+    typeof entry.why === "string" &&
+    (entry.name === undefined || typeof entry.name === "string") &&
+    (entry.family === undefined || isFamily(entry.family)) &&
+    (entry.hex === undefined || typeof entry.hex === "string")
+  );
+}
+
+/** Narrows a un `OverrideAdd` concreto: a diferencia de fix, aquí todo es obligatorio. */
+function isOverrideAdd(entry: Record<string, unknown>): entry is OverrideAdd {
+  return (
+    typeof entry.why === "string" &&
+    typeof entry.name === "string" &&
+    isFamily(entry.family) &&
+    typeof entry.hex === "string"
+  );
+}
+
+/** Narrows a un `OverrideDrop`: solo necesita el porqué. */
+function isOverrideDrop(entry: Record<string, unknown>): entry is OverrideDrop {
+  return typeof entry.why === "string";
+}
+
 /**
  * Valida un bloque del fichero de overrides. Devuelve las entradas bien
  * formadas y apunta en `problems` las que no lo estén, para que un override
- * mal escrito no se cuele en silencio.
+ * mal escrito no se cuele en silencio. El guard de tipo final narrows a T
+ * en vez de confiar en un `as`, que aquí TS rechazaría (ver tsconfig.node.json).
  */
-function readSection(
+function readSection<T extends Record<string, unknown>>(
   raw: unknown,
   section: string,
   required: readonly string[],
-): Map<string, Record<string, unknown>> {
-  const entries = new Map<string, Record<string, unknown>>();
+  isValid: (entry: Record<string, unknown>) => entry is T,
+): Map<string, T> {
+  const entries = new Map<string, T>();
   if (raw === undefined) return entries;
 
   if (!isRecord(raw)) {
@@ -177,6 +211,10 @@ function readSection(
       problems.push(`${where}: familia desconocida "${String(entry.family)}".`);
       continue;
     }
+    if (!isValid(entry)) {
+      problems.push(`${where}: tiene un campo con un tipo inesperado.`);
+      continue;
+    }
 
     entries.set(code, entry);
   }
@@ -194,15 +232,11 @@ function readOverrides(): Overrides {
   }
 
   return {
-    fix: Object.fromEntries(
-      readSection(parsed.fix, "fix", []),
-    ) as Record<string, OverrideFix>,
+    fix: Object.fromEntries(readSection(parsed.fix, "fix", [], isOverrideFix)),
     add: Object.fromEntries(
-      readSection(parsed.add, "add", ["name", "family", "hex"]),
-    ) as Record<string, OverrideAdd>,
-    drop: Object.fromEntries(
-      readSection(parsed.drop, "drop", []),
-    ) as Record<string, OverrideDrop>,
+      readSection(parsed.add, "add", ["name", "family", "hex"], isOverrideAdd),
+    ),
+    drop: Object.fromEntries(readSection(parsed.drop, "drop", [], isOverrideDrop)),
   };
 }
 
