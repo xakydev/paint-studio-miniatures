@@ -12,6 +12,12 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "virtual:paint-images",
+                "message": "Regla de capas: domain no importa virtual:paint-images. El módulo virtual de fotos solo lo conoce el adaptador en data/images; domain es lógica pura."
+              }
+            ],
             "patterns": [
               {
                 "group": ["**/data", "**/data/**", "**/ui", "**/ui/**", "@supabase/supabase-js"],
@@ -65,6 +71,12 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "virtual:paint-images",
+                "message": "Regla de capas: ui no importa virtual:paint-images. Las URLs de las fotos llegan por el puerto PaintImages, inyectado desde main.tsx; solo data/images conoce el módulo virtual."
+              }
+            ],
             "patterns": [
               {
                 "group": ["@supabase/supabase-js"],
@@ -85,6 +97,12 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "virtual:paint-images",
+                "message": "Regla de capas: ni la raíz de composición importa virtual:paint-images; usa el adaptador de data/images (manifestPaintImages)."
+              }
+            ],
             "patterns": [
               {
                 "group": ["@supabase/supabase-js"],
@@ -102,6 +120,12 @@
         "no-restricted-imports": [
           "error",
           {
+            "paths": [
+              {
+                "name": "virtual:paint-images",
+                "message": "Regla de capas: el módulo virtual de fotos solo se importa dentro de data/images, el adaptador. Ningún fichero suelto de la raíz de src/ lo necesita."
+              }
+            ],
             "patterns": [
               {
                 "group": ["@supabase/supabase-js"],

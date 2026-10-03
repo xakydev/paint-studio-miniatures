@@ -30,3 +30,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Fotos de producto de AK Interactive: tienen copyright de terceros y son de
+# uso estrictamente personal y local. Nunca deben llegar a git ni a dist/.
+/local-assets/

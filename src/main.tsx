@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App";
+import { manifestPaintImages } from "./data/images/manifestPaintImages";
 import type { Backend } from "./data/ports/Backend";
 import { readSupabaseSettings } from "./data/supabase/settings";
 import "./index.css";
@@ -10,7 +11,8 @@ const container = document.getElementById("root");
 if (!container) throw new Error("Falta el nodo #root en index.html.");
 
 /**
- * Raíz de composición: el único sitio que sabe que el backend es Supabase.
+ * Raíz de composición: el único sitio que sabe que el backend es Supabase y
+ * que las fotos salen del manifiesto local (en producción, siempre vacío).
  *
  * El SDK pesa más de 200 kB, así que solo se descarga si hay configuración:
  * quien usa la app en local no lo paga. Si al compilar no están las variables,
@@ -35,7 +37,7 @@ async function loadBackend(): Promise<Backend | null> {
 void loadBackend().then((backend) => {
   createRoot(container).render(
     <StrictMode>
-      <App backend={backend} />
+      <App backend={backend} paintImages={manifestPaintImages} />
     </StrictMode>,
   );
 });

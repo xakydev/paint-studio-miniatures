@@ -26,5 +26,5 @@
   },
   // Los scripts corren con `node` (sin ts-node): noEmit + tipos de node + erasableSyntaxOnly
   // bastan para comprobarlos sin que tsc intente emitir nada que node no vaya a usar.
-  "include": ["vite.config.ts", "scripts/*.ts"]
+  "include": ["vite.config.ts", "scripts/*.ts", "vite/**/*.ts"]
 }

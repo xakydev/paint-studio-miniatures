@@ -44,7 +44,14 @@ npm run dev        # http://localhost:5173 (también accesible desde el móvil e
 data/raw/               Tablas de pinturas de terceros, vendorizadas sin tocar
 data/overrides.json     Nuestras correcciones sobre esa fuente
 scripts/                build-catalog.ts: raw + overrides → src/data/static/catalog.json
-                        check-bundle-secrets.ts: vigila dist/ al final de npm run build
+                        check-bundle-secrets.ts y check-bundle-assets.ts: vigilan dist/
+                        al final de npm run build
+                        fetch-images.ts: descarga a mano las fotos de AK (ver más abajo)
+vite/                   paintImagesPlugin.ts: sirve las fotos locales solo en desarrollo
+data/ak-images.json     Mapa código → URL pública de cada foto de AK, sin imágenes
+                        (lo genera fetch:images y se versiona)
+local-assets/           Fotos descargadas. Ignorada por git; nunca llega a dist/
+.githooks/              pre-commit: rechaza cualquier foto antes de que entre al historial
 supabase/               config.toml, migrations/ y tests/database/ (pgTAP) del backend opcional
 src/domain/             Tipos, reglas puras y transiciones: color, catálogo,
                         borrado lógico, fusión de recetas, respaldo
@@ -53,10 +60,12 @@ src/data/ports/         Contratos de persistencia y de sesión (CollectionReposi
 src/data/local/         Adaptador de localStorage que implementa esos puertos
 src/data/memory/        Adaptador en memoria, para tests
 src/data/static/        catalog.json (generado) y recipes.json (semilla editable)
+src/data/images/        Adaptador de fotos locales (PaintImages) sobre el manifiesto
 src/data/supabase/      Adaptador remoto opcional: implementa Backend y AuthGateway
                         con @supabase/supabase-js; es el único módulo que lo importa
 src/ui/                 Componentes, páginas y el LibraryProvider que las conecta
-src/main.tsx            Raíz de composición: construye el backend (o null) y monta <App>
+src/main.tsx            Raíz de composición: construye el backend (o null), elige
+                        el adaptador de fotos y monta <App>
 ```
 
 **Por qué CIEDE2000 y no distancia RGB.** Dos colores pueden estar cerca en RGB
@@ -268,6 +277,66 @@ el trigger. Eliminar una cuenta con datos exige un proceso manual explícito:
 una migración que retire el trigger de borrado, borre entonces las filas del
 usuario y lo vuelva a crear; un acto visible y revisable, nunca un `DELETE`
 directo desde la app.
+
+## Fotos de los botes (opcional, solo en local)
+
+Las tarjetas del catálogo pueden mostrar la foto del bote en vez del swatch de
+color. Las fotos **no están en el repositorio y nunca lo estarán**: son de AK
+Interactive, y su [aviso legal](https://ak-interactive.com/legal-notice/)
+prohíbe reproducirlas o distribuirlas sin su permiso por escrito. Este proyecto
+las descarga solo para uso personal, en tu equipo, y se asegura de que no
+salgan de él. Si no las descargas, la app se ve exactamente igual que siempre.
+
+```bash
+npm install            # activa también el hook de .githooks/ (ver abajo)
+npm run fetch:images   # unos minutos: una petición por segundo
+npm run dev            # reinícialo si ya estaba arrancado
+```
+
+`fetch:images` lee los sitemaps de producto de la web de AK, se queda con las
+fotos cuyo nombre es exactamente un código del catálogo (`AK11179.jpg`; nada de
+Real Colors ni de miniaturas `-300x300`), las reduce a WebP de 320 px y las
+guarda en `local-assets/paints/`. Es idempotente: lo ya descargado no se vuelve
+a pedir, y si se corta a medias continúa donde se quedó. Se identifica con un
+`User-Agent` que enlaza a este repositorio.
+
+**Si encuentra menos del 95 % de las fotos, se aborta sin descargar nada**,
+porque casi siempre significa que la web de AK ha cambiado. Si de verdad AK no
+tiene foto de alguna referencia, añádela a `excluded` en `data/ak-images.json`
+con el motivo, y vuelve a lanzarlo: las exclusiones quedan a la vista en el
+diff en lugar de esconderse en el porcentaje. Al abortar, el script lista los
+códigos que no encontró. Si es la primera ejecución y el fichero aún no
+existe, créalo con esta forma (`images` y `missing` los rellena el script):
+
+```json
+{
+  "images": {},
+  "excluded": { "AK11999": "AK no publica foto de esta referencia" },
+  "missing": []
+}
+```
+
+### Por qué no salen de tu equipo
+
+Las fotos viven fuera de `public/`, así que Vite nunca las copia al build. Solo
+las sirve el servidor de desarrollo (`vite/paintImagesPlugin.ts`), también a tu
+red local para verlas desde el móvil mientras pintas. En el build, el módulo
+`virtual:paint-images` es siempre un objeto vacío aunque haya fotos en el
+disco: producción no puede referenciar ninguna. `vite preview` tampoco las
+sirve, porque se comporta como producción.
+
+Por si algo falla, hay tres redes y todas son automáticas:
+
+| Red | Cuándo actúa | Qué hace |
+|---|---|---|
+| `.githooks/pre-commit` | Al hacer commit | Rechaza el commit si incluye algo de `local-assets/` o un `AK….webp/jpg/png` |
+| `scripts/trackedAssets.test.ts` | En `npm test` | Falla si git sigue algo bajo `local-assets/` (p. ej. tras un `--no-verify`) |
+| `scripts/check-bundle-assets.ts` | En `npm run build` | Falla si `dist/` tiene una imagen raster fuera de la lista blanca, un `AK…` o una referencia a las fotos |
+
+El hook lo activa el script `prepare` en cada `npm install`, con
+`git config core.hooksPath .githooks`. Para desactivarlo:
+`git config --unset core.hooksPath`. Un `git revert` de este cambio no lo hace
+por ti, porque es configuración local de tu repositorio, no un fichero.
 
 ## Sobre la precisión del color
 
