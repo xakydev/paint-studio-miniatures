@@ -1,7 +1,8 @@
 import { useLibrary } from "../hooks/libraryContext";
+import { usePaintImages } from "../hooks/paintImagesContext";
 import { PAINT_FAMILY_LABEL, type Paint } from "../../domain/types";
 import { OwnershipControl } from "./OwnershipControl";
-import { PaintSwatch } from "./PaintSwatch";
+import { PaintPhoto } from "./PaintPhoto";
 
 interface PaintCardProps {
   paint: Paint;
@@ -12,13 +13,14 @@ interface PaintCardProps {
 
 export function PaintCard({ paint, delta, deltaLabel }: PaintCardProps) {
   const { statusOf, entryOf } = useLibrary();
+  const { photoUrl } = usePaintImages();
   const status = statusOf(paint.code);
   const entry = entryOf(paint.code);
   const isRunningLow = status === "owned" && entry !== undefined && entry.level <= 1;
 
   return (
     <article className="flex flex-col gap-3 rounded-xl border border-white/10 bg-neutral-900/60 p-3">
-      <PaintSwatch hex={paint.hex} label={paint.hex} size="lg" title={paint.name} />
+      <PaintPhoto paint={paint} url={photoUrl(paint.code)} />
 
       <div className="min-w-0">
         <div className="flex items-baseline justify-between gap-2">

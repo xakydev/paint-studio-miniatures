@@ -1,9 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import type { Backend } from "./data/ports/Backend";
+import type { PaintImages } from "./data/ports/PaintImages";
 import { Layout } from "./ui/components/Layout";
 import { UploadFailed, UploadSkippedNotice } from "./ui/components/UploadNotices";
 import { LibraryProvider } from "./ui/hooks/LibraryProvider";
+import { PaintImagesContext } from "./ui/hooks/paintImagesContext";
 import { useSession } from "./ui/hooks/sessionContext";
 import { SessionProvider } from "./ui/hooks/SessionProvider";
 import { SOURCE_STATUS, useLibrarySource } from "./ui/hooks/useLibrarySource";
@@ -20,13 +22,25 @@ export interface AppProps {
    * ni App ni sus tests leen el entorno ni tocan la red.
    */
   backend?: Backend | null;
+  /**
+   * Fotos locales de los botes. Sin ella no hay fotos y las tarjetas muestran
+   * el swatch de color, que es lo que pasa en los tests y en producción.
+   */
+  paintImages?: PaintImages;
 }
 
-export function App({ backend = null }: AppProps) {
-  return (
+export function App({ backend = null, paintImages }: AppProps) {
+  const library = (
     <SessionProvider auth={backend?.auth ?? null}>
       <LibraryRoot backend={backend} />
     </SessionProvider>
+  );
+  // Sin adaptador no se monta el proveedor: rige el valor por defecto del
+  // contexto (sin fotos), en vez de inventar uno aquí.
+  return paintImages === undefined ? (
+    library
+  ) : (
+    <PaintImagesContext value={paintImages}>{library}</PaintImagesContext>
   );
 }
 
