@@ -188,6 +188,62 @@ describe("matchCatalog", () => {
     ]);
   });
 
+  // Casos reales encontrados en la ejecución contra AK: los barnices se
+  // publican como AK11237_web.jpg y las imprimaciones como AK11245-1.jpg.
+  it("acepta la variante _web del nombre (AK11179_web.jpg)", () => {
+    const url = "https://ak-interactive.com/wp-content/uploads/2020/06/AK11179_web.jpg";
+
+    expect(matchCatalog([url], codes, []).images).toEqual({ AK11179: url });
+  });
+
+  it("acepta la variante numerada de AK (AK11179-1.jpg)", () => {
+    const url = "https://ak-interactive.com/wp-content/uploads/2021/06/AK11179-1.jpg";
+
+    expect(matchCatalog([url], codes, []).images).toEqual({ AK11179: url });
+  });
+
+  it("sigue rechazando las miniaturas -WxH aunque acepte -N", () => {
+    const result = matchCatalog(
+      [
+        "https://ak-interactive.com/wp-content/uploads/2021/06/AK11179-1-300x300.jpg",
+        "https://ak-interactive.com/wp-content/uploads/2021/06/AK11179-1024x1024.jpg",
+      ],
+      codes,
+      [],
+    );
+
+    expect(result.images).toEqual({});
+  });
+
+  it("rechaza otros sufijos que no son variantes de la foto (AK11179_02_Web.jpg)", () => {
+    const result = matchCatalog(
+      ["https://ak-interactive.com/wp-content/uploads/2021/06/AK11179_02_Web.jpg"],
+      codes,
+      [],
+    );
+
+    expect(result.images).toEqual({});
+  });
+
+  it("entre variantes prefiere el nombre exacto, luego _web y luego el -N más bajo", () => {
+    const exact = "https://ak-interactive.com/wp-content/uploads/2020/01/AK11179.jpg";
+    const web = "https://ak-interactive.com/wp-content/uploads/2026/01/AK11179_web.jpg";
+    const two = "https://ak-interactive.com/wp-content/uploads/2026/01/AK11179-2.jpg";
+    const one = "https://ak-interactive.com/wp-content/uploads/2026/01/AK11179-1.jpg";
+
+    expect(matchCatalog([two, one, web, exact], codes, []).images.AK11179).toBe(exact);
+    expect(matchCatalog([two, one, web], codes, []).images.AK11179).toBe(web);
+    expect(matchCatalog([two, one], codes, []).images.AK11179).toBe(one);
+  });
+
+  it("la misma URL repetida (página en inglés y en español) no es un conflicto", () => {
+    const url = "https://ak-interactive.com/wp-content/uploads/2020/06/AK11179_web.jpg";
+    const result = matchCatalog([url, url], codes, []);
+
+    expect(result.images).toEqual({ AK11179: url });
+    expect(result.conflicts).toEqual([]);
+  });
+
   it("los códigos del catálogo sin URL encontrada aparecen en missing", () => {
     const result = matchCatalog([], codes, []);
 

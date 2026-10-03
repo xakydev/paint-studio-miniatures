@@ -80,14 +80,30 @@ export function parseImageLocs(xml: string): string[] {
 const AK_HOST = "ak-interactive.com";
 
 /**
- * Nombre de fichero de una foto de producto original, tal como la sirve
- * WordPress: `AK11179.jpg`. Deliberadamente NO matchea
- * `AK11179-300x300.jpg`: ese sufijo `-WxH` es una miniatura generada por
- * WordPress (`add_image_size`), no la foto original, y no se puede pedir en
- * un tamaño reducido (ver explore.md: `-300x300` da 404 para el tamaño que
- * se probó, y en general esos recortes no son el fichero fuente).
+ * Nombre de fichero de una foto de producto, tal como la publica AK:
+ * - `AK11179.jpg`, el caso general;
+ * - `AK11237_web.jpg`, como publica los barnices;
+ * - `AK11245-1.jpg`, como publica las imprimaciones (variantes numeradas).
+ *
+ * Deliberadamente NO matchea `AK11179-300x300.jpg` ni `AK11245-1-300x300.jpg`:
+ * el sufijo `-WxH` es un recorte que genera WordPress, no la foto original.
+ * Tampoco otros sufijos (`AK8273_02_Web.jpg` son fotos secundarias del mismo
+ * producto, no el bote).
  */
-const PRODUCT_IMAGE_FILENAME = /^(AK\d+)\.(?:jpe?g|png|webp)$/i;
+const PRODUCT_IMAGE_FILENAME = /^(AK\d+)(?:(_web)|-(\d+))?\.(?:jpe?g|png|webp)$/i;
+
+interface ImageCandidate {
+  readonly url: string;
+  /** Menor es mejor: 0 nombre exacto, 1 `_web`, 2 + N para `-N`. */
+  readonly rank: number;
+}
+
+/** Prefiere la foto canónica: exacta, luego `_web`, luego la variante `-N` más baja. */
+function rankOf(match: RegExpExecArray): number {
+  if (match[2] !== undefined) return 1;
+  if (match[3] !== undefined) return 2 + Number(match[3]);
+  return 0;
+}
 
 function fileNameOf(url: string): string | null {
   try {
@@ -117,7 +133,7 @@ export interface CatalogMatch {
   readonly images: Readonly<Record<string, string>>;
   /** Códigos del catálogo sin ninguna URL encontrada (excluidos o no). */
   readonly missing: readonly string[];
-  /** Un código con más de una URL candidata: gana la lexicográficamente mayor. */
+  /** Un código con más de una URL candidata: gana la más canónica (ver `rankOf`). */
   readonly conflicts: readonly CatalogConflict[];
   /** Códigos excluidos que sí aparecen en los sitemaps: la exclusión ha caducado. */
   readonly staleExclusions: readonly string[];
@@ -126,7 +142,8 @@ export interface CatalogMatch {
 /**
  * Construye el mapa código→URL a partir de las `image:loc` de todos los
  * sitemaps de producto, aceptando solo fotos del host oficial cuyo nombre de
- * fichero sea `AK<código>.<ext>` y cuyo código exista en el catálogo.
+ * fichero sea `AK<código>.<ext>` (o sus variantes `_web` y `-N`) y cuyo
+ * código exista en el catálogo.
  *
  * @param urls URLs de imagen tal como aparecen en los sitemaps (sin deduplicar).
  * @param codes Códigos del catálogo (p. ej. `catalog.json` mapeado a `code`).
@@ -139,9 +156,11 @@ export function matchCatalog(
 ): CatalogMatch {
   const catalogCodes = new Set(codes);
   const excludedCodes = new Set(excluded);
-  const candidates = new Map<string, string[]>();
+  const candidates = new Map<string, ImageCandidate[]>();
 
-  for (const url of urls) {
+  // La misma foto aparece una vez por idioma (página en inglés y en español):
+  // repetida no es un conflicto.
+  for (const url of new Set(urls)) {
     if (!isOfficialAkHost(url)) continue;
     const fileName = fileNameOf(url);
     if (fileName === null) continue;
@@ -150,21 +169,30 @@ export function matchCatalog(
     const code = match[1]?.toUpperCase();
     if (code === undefined || !catalogCodes.has(code)) continue;
 
+    const candidate: ImageCandidate = { url, rank: rankOf(match) };
     const existing = candidates.get(code);
-    if (existing === undefined) candidates.set(code, [url]);
-    else existing.push(url);
+    if (existing === undefined) candidates.set(code, [candidate]);
+    else existing.push(candidate);
   }
 
   const images: Record<string, string> = {};
   const conflicts: CatalogConflict[] = [];
   const staleExclusions: string[] = [];
 
-  for (const [code, candidateUrls] of candidates) {
-    const sorted = [...candidateUrls].sort();
+  for (const [code, codeCandidates] of candidates) {
+    // Primero la variante más canónica; a igualdad, la URL lexicográficamente
+    // mayor, que en WordPress es la subida más reciente (`uploads/AAAA/MM/`).
+    const best = Math.min(...codeCandidates.map((candidate) => candidate.rank));
+    const sorted = codeCandidates
+      .filter((candidate) => candidate.rank === best)
+      .map((candidate) => candidate.url)
+      .sort();
     const chosen = sorted[sorted.length - 1];
     if (chosen === undefined) continue;
     images[code] = chosen;
-    if (candidateUrls.length > 1) conflicts.push({ code, urls: candidateUrls });
+    if (codeCandidates.length > 1) {
+      conflicts.push({ code, urls: codeCandidates.map((candidate) => candidate.url) });
+    }
     if (excludedCodes.has(code)) staleExclusions.push(code);
   }
 
