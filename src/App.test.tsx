@@ -51,7 +51,7 @@ describe("App", () => {
   it("monta el catálogo en la ruta raíz", async () => {
     await render();
     expect(container.textContent).toContain("Catálogo AK Interactive");
-    expect(container.textContent).toContain("286 referencias");
+    expect(container.textContent).toContain("287 referencias");
   });
 
   it("monta la lista de recetas", async () => {

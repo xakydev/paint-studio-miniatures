@@ -17,8 +17,8 @@ describe("catálogo", () => {
     expect(new Set(codes).size).toBe(codes.length);
   });
 
-  it("tiene 286 referencias, cada una con su Lab calculado y sin códigos repetidos", () => {
-    expect(PAINTS).toHaveLength(286);
+  it("tiene 287 referencias, cada una con su Lab calculado y sin códigos repetidos", () => {
+    expect(PAINTS).toHaveLength(287);
 
     for (const paint of PAINTS) {
       expect(Number.isFinite(paint.lab.l)).toBe(true);
@@ -27,7 +27,7 @@ describe("catálogo", () => {
     }
 
     const codes = PAINTS.map((paint) => paint.code);
-    expect(new Set(codes).size).toBe(286);
+    expect(new Set(codes).size).toBe(287);
   });
 
   it("tiene un hex válido en cada referencia", () => {

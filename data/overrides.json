@@ -9,6 +9,13 @@
       "why": "Mismo caso que AK11001: negro base de Standard etiquetado como Intense en la fuente."
     }
   },
-  "add": {},
+  "add": {
+    "AK11119": {
+      "name": "Cork",
+      "family": "standard",
+      "hex": "#A17548",
+      "why": "Falta en la fuente (salta de AK11118 a AK11120), pero AK la vende en la gama Standard 3rd Gen. Hex de la ficha de Scalemates (colors/…ak-11119-cork-standard-acrylic-matt--22432)."
+    }
+  },
   "drop": {}
 }
