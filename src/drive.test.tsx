@@ -125,7 +125,7 @@ describe("sesión de usuario", () => {
 
     expect(container.textContent).toContain("Ultramarine");
     expect(container.textContent).toContain("AK11179");
-    expect(container.textContent).toMatch(/1 de 286 referencias/);
+    expect(container.textContent).toMatch(/1 de 287 referencias/);
 
     // El armario empieza vacío y la cabecera lo refleja.
     expect(container.textContent).toContain("0 en armario");

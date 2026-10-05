@@ -6,7 +6,7 @@ cuenta, y la colección se guarda en el propio equipo.
 
 ## Qué hace
 
-- **Catálogo** — 286 referencias de AK 3rd Generation pensadas para miniatura:
+- **Catálogo** — 287 referencias de AK 3rd Generation pensadas para miniatura:
   Standard, Figures, Metallic, The Inks, Intense, Pastel, imprimaciones y
   auxiliares. Búsqueda por nombre, código o gama, insensible a tildes, y filtros
   por familia. Las subgamas Air y AFV quedan fuera a propósito: son cartas
